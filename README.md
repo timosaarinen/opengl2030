@@ -13,29 +13,32 @@
 
 ```c
 #include <ogl2030.h>
-#include <math.h>
 
-void myrender(GL2030* gl) {
-  float t = gl2030_time( gl );
-
+void myrender(OGL* ogl, OGL_renderstate* rs) {
+  const float t = rs->time;
   const float trisize = 0.5f;
-  gl2030_debug_tri( gl,
+  ogl_debug_tri( ogl,
      trisize * cos(t), trisize * sinf(t),
-     trisize * cos(t + 1/3.0f*M_2PI), trisize * sinf(t + 1/3.0f*M_2PI),
-     trisize * cos(t + 2/3.0f*M_2PI), trisize * sinf(t + 2/3.0f*M_2PI) );
+     trisize * cos(t + 1/3.0f*TWOPI), trisize * sinf(t + 1/3.0f*TWOPI),
+     trisize * cos(t + 2/3.0f*TWOPI), trisize * sinf(t + 2/3.0f*TWOPI) );
 }
 
-void main() {
-  GL2030* gl = gl2030_open_json( '{ "mode": "fullscreen", "debug": true, "vsync": true }' ); // same as Web API
-  gl2030_add_render( gl, &myrender );
-  gl2030_run_render_loop( gl );
+int main() {
+  const OGL_config config = {
+    .mode  = OGL_FULLSCREEN,
+    .debug = true,
+    .vsync = true,
+  };
+  OGL* ogl = ogl_open(&config);
+  ogl_add_render( ogl, &myrender );
+  ogl_run_render_loop( ogl );
+  return 0;
 }
 ```
 
 # Roadmap / TODO:
-- test-compile above with dummy functions
-- Vulkan backend to actually implement this
-- Compatible Web API with WebGL2 backend
+- WebGL2 backend, minimal .html example
+- Vulkan backend (MoltenVK on Mac?)
 - ++
 
 # Contributions
