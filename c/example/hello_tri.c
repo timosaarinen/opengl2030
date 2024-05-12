@@ -4,9 +4,9 @@ void myrender(OGL* ogl, OGL_renderstate* rs) {
   const float t = rs->time;
   const float trisize = 0.5f;
   ogl_debug_tri( ogl,
-     trisize * cos(t), trisize * sinf(t),
-     trisize * cos(t + 1/3.0f*TWOPI), trisize * sinf(t + 1/3.0f*TWOPI),
-     trisize * cos(t + 2/3.0f*TWOPI), trisize * sinf(t + 2/3.0f*TWOPI) );
+     trisize * cosf(t), trisize * sinf(t),
+     trisize * cosf(t + 1/3.0f*TWOPI), trisize * sinf(t + 1/3.0f*TWOPI),
+     trisize * cosf(t + 2/3.0f*TWOPI), trisize * sinf(t + 2/3.0f*TWOPI) );
 }
 
 int main() {
