@@ -1,6 +1,6 @@
 # Open Graphics Library 2030
 
-- In the spirit, simplicity and beauty of the OpenGL.. *ES 3.0* rendering system specification (no, not the 1.1 one)
+- In the spirit, simplicity and beauty of the OpenGL.. *ES 3.0* rendering system specification _(devnote: no, not the 1.1 one)_
 - Simplified from all the non-essentials, except where to avoid boilerplate and ease the learning curve (getting things fast on the screen)
 - Defines an API through which a client app can control rendering and allows for IHV (GPU) drivers
 - For current immediate mode and tiled rendering architectures and future approaches
@@ -11,7 +11,10 @@
 
 # Show me the code!
 
-### Native (naturally with C.. Rust is an option, but not for this)
+### Native API
+
+_(devnote: naturally with C.. Rust is an option, but not for this)_
+
 ```c
 #include <ogl2030.h>
 
@@ -37,7 +40,9 @@ int main() {
 }
 ```
 
-### Webtech (JS but later types, maybe TS compatible)
+### Web API
+
+_(devnote: would have been better with TS, but trying to minimize deps)_
 
 ```js
 <!DOCTYPE html>
