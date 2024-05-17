@@ -1,0 +1,16 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OGL2030 Test</title>
+  <style>
+    body { margin: 0; background-color: #000; color: #FFF; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100vh; }
+    canvas { display: block; width: 100vw; height: 100vh; }
+    .caption, .logo { position: absolute; bottom: 10px; text-align: center; width: 100%; font-family: Roboto, sans-serif; }
+    .caption { bottom: 30px; font-size: 24px; }
+    .logo { bottom: 10px; font-size: 18px; color: #03D000; }
+    #testlog { position: fixed; top: 0; left: 0; z-index: 1; color: #fff; font-family:'Courier New', Courier, monospace; }
+  </style></head><body>
+    <div id="canvas" class="canvas"></div>
+    <script type="module" src="test.js"></script>
+    <div class="caption">Test</div>
+    <div class="logo">Open Graphics Library 2030</div>
+    <div id="testlog">...</div>
+</body></html>

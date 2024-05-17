@@ -28,16 +28,13 @@
         trisize * cos(t + 1/3.0*TWOPI), trisize * sin(t + 1/3.0*TWOPI),
         trisize * cos(t + 2/3.0*TWOPI), trisize * sin(t + 2/3.0*TWOPI) );
     }
-    document.addEventListener('DOMContentLoaded', function() {
-      const config = {
-        mode: 'fullscreen',
-        parent: document.getElementById('canvas'),
-        debug: true,
-        fullscreen: true,
-      };
-      const gl = ogl_open( config );
-      ogl_add_render( gl, myrender );
-      ogl_run_render_loop( gl );
+    document.addEventListener('DOMContentLoaded', async function() {
+      const parent = document.getElementById('canvas');
+      const g = await ogl_open({ 
+        mode: 'fullscreen', parent: parent
+      })
+      ogl_add_render( g, myrender )
+      ogl_run_render_loop( g )
     });
     //------------------------------------------------------------------------
   </script>
