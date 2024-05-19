@@ -1,10 +1,10 @@
 // TODO: wip, inits WebGPU, but falls back to WebGL for now
 import { panic } from './util.js'
-import { create_webgl2_context } from './webgl2.js';
+import { create_webgl2_context } from './webgl2.js'
 
 export async function create_webgpu_context(config, canvas) {
-  const adapter = await navigator.gpu?.requestAdapter();
-  const device = await adapter?.requestDevice();
+  const adapter = await navigator.gpu?.requestAdapter()
+  const device = await adapter?.requestDevice()
   if (!device) { panic('Need a browser that supports WebGPU'); return }
   const webgpu = canvas.getContext('webgpu')
   if (!webgpu) { panic('WebGPU context not supported'); return null }
@@ -23,10 +23,10 @@ export async function create_webgpu_context(config, canvas) {
       LOG('display list submit -> WebGL2:', gl_tostring(gl))
       for (const c of gl.cmd) {
         switch(c.cmd) {
-          case 'viewport':  viewport(c.rect); break
-          case 'clear':     clear(c.color, c.depth, c.stencil); break
+          case 'viewport':  viewport(c.rect) break
+          case 'clear':     clear(c.color, c.depth, c.stencil) break
           // TODO: cmds
-          default:          WARNING(`unknown command: ${c.cmd}`); break
+          default:          WARNING(`unknown command: ${c.cmd}`) break
         }
       }
     }
@@ -34,7 +34,7 @@ export async function create_webgpu_context(config, canvas) {
   }
 
   // TODO: falls back to WebGL, but keeps the initialized WebGPU fields
-  const webgl2_context = create_webgl2_context(config, canvas);
-  Object.assign(webgpu_context, webgl2_context); // mix WebGPU/WebGL2 objects -> webgpu_context
-  return webgpu_context;
+  const webgl2_context = create_webgl2_context(config, canvas)
+  Object.assign(webgpu_context, webgl2_context) // mix WebGPU/WebGL2 objects -> webgpu_context
+  return webgpu_context
 }

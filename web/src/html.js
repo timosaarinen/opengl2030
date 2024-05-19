@@ -9,20 +9,18 @@ export const tohtml = (str) => {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .replace(/'/g, "&#039;")
   };
   // Escape HTML characters and replace newlines with <br> tags
-  return escapeHtml(str).replace(/\n/g, '<br>');
-};
-
+  return escapeHtml(str).replace(/\n/g, '<br>')
+}
 export function etext(id, text) {
   const e = ebyid(id)
   if (e) e.innerHTML += tohtml(s)
 }
-
 export function create_canvas() {
-  const canvas = document.createElement('canvas');
-  canvas.width = vw();
-  canvas.height = vh();
+  const canvas = document.createElement('canvas')
+  canvas.width = vw()
+  canvas.height = vh()
   return canvas
 }

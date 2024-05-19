@@ -1,6 +1,6 @@
 // TODO: keep in context object?
 export let disable_logging = false // set by config or ogl_enable_log(true | false)
-export let force_single_threaded = false // for debugging, can force single-threaded (TODO: WebWorkers..)
+export let force_single_threaded = false // for debugging, can force single-threadex (TODO: WebWorkers..)
 
 export const vw      = () => (window.innerWidth)
 export const vh      = () => (window.innerHeight)
