@@ -1,4 +1,4 @@
-import { LOG } from './util.js';
+import { LOG, safe_stringify } from './util.js';
 
 const cmd = (gl, name, data) => { LOG(gl, name, data); gl.cmd.push({ cmd: name, ...data }) }
 
@@ -9,5 +9,6 @@ export const gl_update_indexbuffer  = (gl, indexbuffer, data)     => cmd(gl, 'up
 export const gl_use_pipe            = (gl, pipe)                  => cmd(gl, 'use_pipe', { pipe } )
 export const gl_draw_vertices       = (gl, prim, start, count)    => cmd(gl, 'draw_vertices', { prim, start, count } )
 export const gl_draw_indices        = (gl, prim, start, count)    => cmd(gl, 'draw_indices', { prim, start, count } )
+export const gl_draw_imageshader    = (gl, imageshader)           => cmd(gl, 'draw_imageshader', { imageshader } )
 export const gl_tojson              = (gl) => gl.cmd
-export const gl_tostring            = (gl) => JSON.stringify(gl.cmd)
+export const gl_tostring            = (gl) => safe_stringify(gl.cmd)

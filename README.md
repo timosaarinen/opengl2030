@@ -26,16 +26,16 @@ A pragmatic rendering library aiming for simplicity in the modern mobile and des
 </head><body>
   <div id="canvas"></div>
   <script type="module">
-    import { ogl_open, ogl_add_render, ogl_run_render_loop } from '/src/ogl2030.js';
+    import { g_open, g_add_render, g_run_render_loop } from '/src/ogl2030.js';
     import { gl_viewport, gl_clear } from '/src/gl.js'
     import { vec4, rect, sin, cos, TWOPI } from '/src/vecmath.js'
     import { debug_open } from '/src/debug.js'
 
     async function main() {
       const container = document.getElementById('canvas')
-      const g = await ogl_open({ mode: 'fullscreen', backend: 'webgl2', parent: container })
+      const g = await g_open({ mode: 'fullscreen', backend: 'webgl2', parent: container })
       const debug = debug_open( g )
-      ogl_add_render( g, (rs) => {
+      g_add_render( g, (rs) => {
         const t = rs.time
         const trisize = 0.8
         const aspect = rs.w / rs.h
@@ -45,7 +45,7 @@ A pragmatic rendering library aiming for simplicity in the modern mobile and des
                                trisize * cos(t + 1/3.0*TWOPI) / aspect, trisize * sin(t + 1/3.0*TWOPI),
                                trisize * cos(t + 2/3.0*TWOPI) / aspect, trisize * sin(t + 2/3.0*TWOPI) )
       });
-      ogl_run_render_loop( g )
+      g_run_render_loop( g )
     }
     document.addEventListener('DOMContentLoaded', main)
   </script>
@@ -58,24 +58,24 @@ A pragmatic rendering library aiming for simplicity in the modern mobile and des
 ```c
 #include <ogl2030.h>
 
-void myrender(OGL* ogl, OGL_renderstate* rs) {
+void myrender(OGL* ogl, g_renderstate* rs) {
   const float t = rs->time;
   const float trisize = 0.5f;
-  ogl_debug_tri( ogl,
+  g_debug_tri( ogl,
      trisize * cosf(t), trisize * sinf(t),
      trisize * cosf(t + 1/3.0f*TWOPI), trisize * sinf(t + 1/3.0f*TWOPI),
      trisize * cosf(t + 2/3.0f*TWOPI), trisize * sinf(t + 2/3.0f*TWOPI) );
 }
 
 int main() {
-  const OGL_config config = {
-    .mode  = OGL_FULLSCREEN,
+  const g_config config = {
+    .mode  = g_FULLSCREEN,
     .debug = true,
     .vsync = true,
   };
-  OGL* ogl = ogl_open(&config);
-  ogl_add_render( ogl, &myrender );
-  ogl_run_render_loop( ogl );
+  OGL* ogl = g_open(&config);
+  g_add_render( ogl, &myrender );
+  g_run_render_loop( ogl );
   return 0;
 }
 ```

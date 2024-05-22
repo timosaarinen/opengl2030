@@ -17,7 +17,7 @@ export function test_types() {
   TESTLOG('mat4:', m4)
 }
 export function test_display_list() {
-  const gl            = ogl_display_list()
+  const gl            = g_display_list()
   const viewport_rect = { x: 0, y: 0, width: 320, height: 240 }
   const clear_color   = { color: vec4(0.5, 0.07, 1.0, 1) }
   const clear_depth   = 1.0

@@ -58,7 +58,7 @@ function new_vertexbuffer(webgl2, data, layout, program) {
   //   normalize:     Tells whether to normalize signed types (BYTE/SHORT) -> [-1,1] or unsigned types -> [0,1] to the vertex shader attribute input value
   //   offset:        The byte offset (of the first component, i.e. offsetof(MyVertex, pos))
   //   stride:        # of bytes to the next (usually sizeof(MyVertex)) or can be 0 if no other data in between (here 0, as we only have array of vec2 positions)
-  assert(layout == 'vec2 a_position;') // TODO: parse layout -> attribs. Don't require program here, bind in ogl_new_pipe()
+  assert(layout == 'vec2 a_position;') // TODO: parse layout -> attribs. Don't require program here, bind in g_new_pipe()
   const attribs = [ {name: 'a_position', dim: 2, type: FLOAT, offset: 0, normalize: false} ];
 
   const vb = webgl2.createBuffer()
@@ -111,10 +111,32 @@ function submit_display_list(webgl2, displaylist) {
       case 'use_pipe':            use_pipe           (webgl2, c.pipe) ; break
       case 'draw_vertices':       draw_vertices      (webgl2, c.prim, c.start, c.count) ; break
       case 'draw_indices':        draw_indices       (webgl2, c.prim, c.start, c.count) ; break
+      case 'draw_imageshader':    draw_imageshader   (webgl2, c.imageshader) ; break
       default:                    WARNING(`unknown command: ${c.cmd}`) ; break
     }
   }
 }
+//------------------------------------------------------------------------
+// TODO: clean this up
+function draw_imageshader(webgl2, pipe) {
+  const g = pipe.g // kludgy..
+  use_pipe( webgl2, pipe )
+  const program = pipe.program.program
+  const aPosition = webgl2.getAttribLocation(program, 'a_position')
+  const iResolution = webgl2.getUniformLocation(program, 'iResolution')
+  const iTime = webgl2.getUniformLocation(program, 'iTime')
+  const iMouse = webgl2.getUniformLocation(program, 'iMouse')
+  const positionBuffer = webgl2.createBuffer()
+  webgl2.bindBuffer(webgl2.ARRAY_BUFFER, positionBuffer)
+  webgl2.bufferData(webgl2.ARRAY_BUFFER, new Float32Array([-1.0, -1.0, 3.0, -1.0, -1.0, 3.0]), webgl2.STATIC_DRAW)
+  webgl2.enableVertexAttribArray(aPosition)
+  webgl2.vertexAttribPointer(aPosition, 2, webgl2.FLOAT, false, 0, 0)
+  webgl2.uniform3f(iResolution, canvas.width, canvas.height, 1.0)
+  webgl2.uniform1f(iTime, g.rs.time)
+  webgl2.uniform4f(iMouse, g.mouse.x, g.mouse.y, 0.0, 0.0)
+  webgl2.drawArrays(webgl2.TRIANGLES, 0, 3)
+}
+//------------------------------------------------------------------------
 export function create_webgl2_context(config, canvas) {
   const webgl2 = canvas.getContext('webgl2') // WebGL 2.0 (GLSL ES 3.00 #version 300 es)
   if( !webgl2 ) panic('You need a browser with WebGL 2.0 support')

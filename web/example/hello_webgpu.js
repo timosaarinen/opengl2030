@@ -1,4 +1,4 @@
-import { ogl_open, ogl_add_render, ogl_run_render_loop } from '/src/ogl2030.js'
+import { g_open, g_add_render, g_run_render_loop } from '/src/ogl2030.js'
 import { gl_viewport, gl_clear } from '/src/gl.js'
 import { TWOPI, sin, cos } from '/src/vecmath.js'
 import { debug_open } from '/src/debug.js'
@@ -11,9 +11,9 @@ async function main() {
     debug: true,
     fullscreen: true,
   }
-  const g = await ogl_open(config)
+  const g = await g_open(config)
   const debug = debug_open( g )
-  ogl_add_render( g, (rs) => {
+  g_add_render( g, (rs) => {
       const t = rs.time
       const trisize = 0.8
       const aspect = rs.w / rs.h
@@ -23,6 +23,6 @@ async function main() {
                              trisize * cos(t + 1/3.0*TWOPI), trisize * sin(t + 1/3.0*TWOPI) * aspect,
                              trisize * cos(t + 2/3.0*TWOPI), trisize * sin(t + 2/3.0*TWOPI) * aspect)
   })
-  ogl_run_render_loop( g )
+  g_run_render_loop( g )
 }
 document.addEventListener('DOMContentLoaded', main)

@@ -4,11 +4,14 @@ import { create_webgl2_context } from './webgl2.js'
 import { create_webgpu_context } from './webgpu.js'
 import { create_nulldevice_context } from './nulldevice.js'
 
-export function ogl_log(state) {
+const w = () => window.innerWidth
+const h = () => window.innerHeight
+
+export function g_log(state) {
   if (typeof state === 'boolean') disable_logging = !state // ignore if passed undefined
 }
-export async function ogl_open(config) {
-  ogl_log(config.logging)
+export async function g_open(config) {
+  g_log(config.logging)
   const canvas = create_canvas(); assert(canvas)
   const select_backend = config.backend ?? 'webgl2'
   let backend
@@ -23,36 +26,31 @@ export async function ogl_open(config) {
   //----> main OGL30 object
   let ogl = {
     config:   config,
-    w:        canvas.width,
-    h:        canvas.height,
+    w:        w(),
+    h:        h(),
     canvas:   canvas,
     backend:  backend, // @see webgpu.js and webgl2.js
     renderfn: [], // render frame callbacks, in draw order
     rs:       { time: 0.0 }, // TODO: init with full render state?
+    mouse:    { x: 0, y: 0 },
   }
   return ogl
 }
-export function ogl_add_render(g, fn) {
+export function g_add_render(g, fn) {
   g.renderfn.push(fn)
 }
-export function ogl_display_list(name = 'a display list') {
-  return {
+export function g_display_list(g, name = 'a display list') {
+  return { g,
     name: name,
     cmd: [],
   }
 }
-export function ogl_run_render_loop(g) {
-  const w = () => g.canvas.width
-  const h = () => g.canvas.height
-
-  let start = performance.now();
-  const getSeconds = () => (performance.now() - start) / 1000
-
+export function g_run_render_loop(g) {
+  let start = performance.now(); const getSeconds = () => (performance.now() - start) / 1000
   const render_frame = () => {
     const secs = getSeconds()
-    const rs = {
-      g:      g,
-      gl:     ogl_display_list( 'main' ),
+    const rs = { g,
+      gl:     g_display_list( g, 'main' ),
       w:      w(),
       h:      h(),
       aspect: w() / h(),
@@ -61,16 +59,24 @@ export function ogl_run_render_loop(g) {
       dt:     secs - g.rs.time,
     }
     LOG('renderframe:', safe_stringify( rs ) )
-    g.rs = rs                               // TODO: need? ..diagnostics?
+    g.rs = rs                               // TODO: need? ..diagnostics? g.rs.gl
     for (const fn of g.renderfn) fn( rs )   // execute the render callbacks
+    console.log( safe_stringify(g) ) // DEBUG
     g.backend.submit_display_list( rs.gl )  // submit the main display list for rendering -> backend
     requestAnimationFrame( render_frame )   // re-schedule for next V-sync (hopefully)
   }
-
   window.addEventListener('resize', () => {
-    const aspect = w() / h()
-    LOG( `resize ${w()} ${h()} aspect ${aspect}` )
+    if (w() !== g.rs.w || h() !== g.rs.h) {
+      // resize canvas to new display size
+      canvas.width = w()
+      canvas.height = h()
+      console.log( `resize ${w()} ${h()} aspect ${w()/h()}` ) // DEBUG
+    }
   }, false)
+  canvas.addEventListener('mousemove', (event) => {
+    g.mouse = { x: event.clientX, y: h() - event.clientY }
+    //LOG( `mouse ${g.mouse.x} ${g.mouse.y}` ) // DEBUG
+  });
   //---- start ticking....
   render_frame()
 }
