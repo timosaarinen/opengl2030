@@ -1,3 +1,4 @@
-export const ogl_new_program  = (g, vshader, fshader) => g.backend.new_program(vshader, fshader)
-export const ogl_new_buffer   = (g, type, data, flags = STATIC_DRAW) => g.backend.new_buffer(type, data, flags)
-export const ogl_new_vao      = (g, buffer, program, attribs) => g.backend.new_vao(buffer, program, attribs)
+export const ogl_new_program      = (g, vshader, fshader)       => g.backend.new_program(vshader, fshader)
+export const ogl_new_vertexbuffer = (g, data, layout, program)  => g.backend.new_vertexbuffer(data, layout, program)
+export const ogl_new_indexbuffer  = (g, data)                   => g.backend.new_buffer(data)
+export const ogl_new_pipe         = (g, program, vb, ib)        => g.backend.new_pipe(program, vb, ib)

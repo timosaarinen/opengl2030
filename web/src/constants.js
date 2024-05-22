@@ -16,8 +16,8 @@ export const TRIANGLE_FAN             = 0x0006  // primitive: triangle fan
 // buffers          
 export const STATIC_DRAW              = 0x88E4  // hint: updated once or very rarely
 export const DYNAMIC_DRAW             = 0x88E8  // hint: updated often
-export const VERTEX_BUFFER            = 0x8892  // ARRAY_BUFFER, vertex data array buffer
-export const INDEX_BUFFER             = 0x8764  // ELEMENT_ARRAY_BUFFER
+export const VERTEX_BUFFER            = 0x8892  // in GL, ARRAY_BUFFER
+export const INDEX_BUFFER             = 0x8764  // in GL, ELEMENT_ARRAY_BUFFER
 // blending factors
 export const ZERO                     = 0x0000
 export const ONE                      = 0x0001
@@ -38,7 +38,7 @@ export const ONE_MINUS_CONSTANT_ALPHA = 0x8004
 export const FUNC_ADD                 = 0x8006
 export const FUNC_SUBTRACT            = 0x800A
 export const FUNC_REVERSE_SUBTRACT    =	0x800B
-// TODO: boolean enable/disable renderstates - keep that kind of API, gl_enable(renderstate, enable)?
+// boolean renderstates
 export const CULL_FACE                = 0x0B44
 export const BLEND                    =	0x0BE2
 export const DEPTH_TEST               = 0x0B71
@@ -48,4 +48,11 @@ export const SAMPLE_ALPHA_TO_COVERAGE = 0x809E
 export const SAMPLE_COVERAGE          = 0x80A0
 export const SCISSOR_TEST             = 0x0C11
 export const STENCIL_TEST             = 0x0B90
-// TODO: barriers, alpha-to-coverage, ...
+// data types
+export const BYTE                     = 0x1400
+export const UNSIGNED_BYTE            = 0x1401
+export const SHORT                    = 0x1402
+export const UNSIGNED_SHORT           = 0x1403
+export const INT                      = 0x1404
+export const UNSIGNED_INT             = 0x1405
+export const FLOAT                    = 0x1406

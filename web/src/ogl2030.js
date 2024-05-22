@@ -1,5 +1,5 @@
 import { create_canvas } from './html.js'
-import { assert } from './util.js'
+import { assert, LOG, safe_stringify } from './util.js'
 import { create_webgl2_context } from './webgl2.js'
 import { create_webgpu_context } from './webgpu.js'
 import { create_nulldevice_context } from './nulldevice.js'
@@ -23,8 +23,8 @@ export async function ogl_open(config) {
   //----> main OGL30 object
   let ogl = {
     config:   config,
-    w:        canvas.innerWidth,
-    h:        canvas.innerHeight,
+    w:        canvas.width,
+    h:        canvas.height,
     canvas:   canvas,
     backend:  backend, // @see webgpu.js and webgl2.js
     renderfn: [], // render frame callbacks, in draw order
@@ -42,10 +42,14 @@ export function ogl_display_list(name = 'a display list') {
   }
 }
 export function ogl_run_render_loop(g) {
-  const w = () => g.canvas.innerWidth
-  const h = () => g.canvas.innerHeight
-const render_frame = (timestamp) => {
-    const secs = timestamp / 1000.0
+  const w = () => g.canvas.width
+  const h = () => g.canvas.height
+
+  let start = performance.now();
+  const getSeconds = () => (performance.now() - start) / 1000
+
+  const render_frame = () => {
+    const secs = getSeconds()
     const rs = {
       g:      g,
       gl:     ogl_display_list( 'main' ),
@@ -56,12 +60,13 @@ const render_frame = (timestamp) => {
       time:   secs,
       dt:     secs - g.rs.time,
     }
-    LOG('renderframe:', JSON.stringify( rs ) )
+    LOG('renderframe:', safe_stringify( rs ) )
     g.rs = rs                               // TODO: need? ..diagnostics?
     for (const fn of g.renderfn) fn( rs )   // execute the render callbacks
     g.backend.submit_display_list( rs.gl )  // submit the main display list for rendering -> backend
     requestAnimationFrame( render_frame )   // re-schedule for next V-sync (hopefully)
   }
+
   window.addEventListener('resize', () => {
     const aspect = w() / h()
     LOG( `resize ${w()} ${h()} aspect ${aspect}` )

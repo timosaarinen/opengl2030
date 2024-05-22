@@ -20,7 +20,7 @@ export function etext(id, text) {
 }
 export function create_canvas() {
   const canvas = document.createElement('canvas')
-  canvas.width = vw()
-  canvas.height = vh()
+  canvas.width = window.innerWidth
+  canvas.height = window.innerHeight
   return canvas
 }

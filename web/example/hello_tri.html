@@ -3,9 +3,9 @@
   <style>
     body { margin: 0; background-color: #000; color: #FFF; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100vh; }
     canvas { display: block; width: 100vw; height: 100vh; }
-    .caption, .logo { position: absolute; bottom: 10px; text-align: center; width: 100%; font-family: Arial, sans-serif; }
+    .caption, .logo { position: absolute; bottom: 10px; text-align: center; width: 100%; font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; }
     .caption { bottom: 30px; font-size: 24px; }
-    .logo { bottom: 10px; font-size: 18px; color: #03D000; }
+    .logo { bottom: 10px; font-size: 18px; color: #00FF00; text-shadow: 0 0 4px #00A000, 0 0 16px #00A000 }
   </style>
 </head><body>
   <div id="canvas"></div>
@@ -14,6 +14,8 @@
     import { gl_viewport, gl_clear } from '/src/gl.js'
     import { vec4, rect, sin, cos, TWOPI } from '/src/vecmath.js'
     import { debug_open } from '/src/debug.js'
+
+    document.addEventListener('DOMContentLoaded', main)
 
     async function main() {
       const container = document.getElementById('canvas')
@@ -31,8 +33,6 @@
       });
       ogl_run_render_loop( g )
     }
-    
-    document.addEventListener('DOMContentLoaded', main)
   </script>
   <div class="caption">Hello, Triangle!</div>
   <div class="logo">Open Graphics Library 2030</div>
