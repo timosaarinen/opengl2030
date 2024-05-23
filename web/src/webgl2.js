@@ -1,4 +1,5 @@
-import { LOG, WARNING, assert } from './util.js'
+import { WARNING, ASSERT } from './util.js'
+import { LOGG } from './log.js'
 import { FLOAT } from './constants.js'
 import { gl_tostring } from './gl.js'
 
@@ -58,7 +59,7 @@ function new_vertexbuffer(webgl2, data, layout, program) {
   //   normalize:     Tells whether to normalize signed types (BYTE/SHORT) -> [-1,1] or unsigned types -> [0,1] to the vertex shader attribute input value
   //   offset:        The byte offset (of the first component, i.e. offsetof(MyVertex, pos))
   //   stride:        # of bytes to the next (usually sizeof(MyVertex)) or can be 0 if no other data in between (here 0, as we only have array of vec2 positions)
-  assert(layout == 'vec2 a_position;') // TODO: parse layout -> attribs. Don't require program here, bind in g_new_pipe()
+  ASSERT(layout == 'vec2 a_position;') // TODO: parse layout -> attribs. Don't require program here, bind in g_new_pipe()
   const attribs = [ {name: 'a_position', dim: 2, type: FLOAT, offset: 0, normalize: false} ];
 
   const vb = webgl2.createBuffer()
@@ -85,7 +86,7 @@ function new_pipe( webgl2, program, vb, ib ) {
   return { type: 'pipe', program, vb, ib }
 }
 function use_pipe( webgl2, pipe ) {
-  assert( pipe.vb.vertexarray );
+  ASSERT( pipe.vb.vertexarray );
   use_program( webgl2, pipe.program );
   if (pipe.ib) {} // TODO:
   webgl2.bindVertexArray( pipe.vb.vertexarray );
@@ -101,7 +102,7 @@ function clear( webgl2, color, depth, stencil ) {
   webgl2.clear( clearbits );
 }
 function submit_display_list(webgl2, displaylist) {
-  LOG('display list submit -> WebGL2:', gl_tostring(displaylist))
+  LOGG( 'backend', 'display list submit -> WebGL2:', gl_tostring(displaylist) )
   for (const c of displaylist.cmd) {
     switch(c.cmd) {
       case 'viewport':            viewport           (webgl2, c.rect) ; break

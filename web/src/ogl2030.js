@@ -1,5 +1,6 @@
 import { create_canvas } from './html.js'
-import { assert, LOG, safe_stringify } from './util.js'
+import { LOGG, log_enableall, log_enablegroup, log_clearall } from './log.js'
+import { ASSERT, safe_stringify } from './util.js'
 import { create_webgl2_context } from './webgl2.js'
 import { create_webgpu_context } from './webgpu.js'
 import { create_nulldevice_context } from './nulldevice.js'
@@ -7,21 +8,17 @@ import { create_nulldevice_context } from './nulldevice.js'
 const w = () => window.innerWidth
 const h = () => window.innerHeight
 
-export function g_log(state) {
-  if (typeof state === 'boolean') disable_logging = !state // ignore if passed undefined
-}
 export async function g_open(config) {
-  g_log(config.logging)
-  const canvas = create_canvas(); assert(canvas)
+  const canvas = create_canvas(); ASSERT(canvas)
   const select_backend = config.backend ?? 'webgl2'
   let backend
   switch(select_backend) {
-    case 'webgl2':  LOG('WebGL2 backend selected.');     backend = create_webgl2_context(config, canvas); break
-    case 'webgpu':  LOG('WebGPU backend selected.');     backend = await create_webgpu_context(config, canvas); break
-    case 'null':    LOG('nulldevice backend selected.'); backend = create_nulldevice_context(config, canvas); break
+    case 'webgl2':  LOGG('WebGL2 backend selected.');     backend = create_webgl2_context(config, canvas); break
+    case 'webgpu':  LOGG('WebGPU backend selected.');     backend = await create_webgpu_context(config, canvas); break
+    case 'null':    LOGG('nulldevice backend selected.'); backend = create_nulldevice_context(config, canvas); break
     default:        panic('Unsupported backend')
   }
-  assert(backend)
+  ASSERT(backend)
   if (config.parent) config.parent.appendChild(canvas)
   //----> main OGL30 object
   let ogl = {
@@ -58,25 +55,27 @@ export function g_run_render_loop(g) {
       time:   secs,
       dt:     secs - g.rs.time,
     }
-    LOG('renderframe:', safe_stringify( rs ) )
+    LOGG( 'renderframe', safe_stringify( rs ) )
     g.rs = rs                               // TODO: need? ..diagnostics? g.rs.gl
     for (const fn of g.renderfn) fn( rs )   // execute the render callbacks
-    console.log( safe_stringify(g) ) // DEBUG
+    LOGG( 'g', safe_stringify(g) )
     g.backend.submit_display_list( rs.gl )  // submit the main display list for rendering -> backend
     requestAnimationFrame( render_frame )   // re-schedule for next V-sync (hopefully)
   }
-  window.addEventListener('resize', () => {
-    if (w() !== g.rs.w || h() !== g.rs.h) {
+  const resize = () => {
+    const width = w()
+    const height = h()
+    if (width !== g.rs.w || height !== g.rs.h) {
       // resize canvas to new display size
-      canvas.width = w()
-      canvas.height = h()
-      console.log( `resize ${w()} ${h()} aspect ${w()/h()}` ) // DEBUG
+      canvas.width = width
+      canvas.height = height
+      g.rs.w = width
+      g.rs.h = height
+      LOGG( 'resize', `resize ${w()} ${h()} aspect ${w()/h()} - window ${window.innerWidth} - ${window.innerHeight}` )
     }
-  }, false)
-  canvas.addEventListener('mousemove', (event) => {
-    g.mouse = { x: event.clientX, y: h() - event.clientY }
-    //LOG( `mouse ${g.mouse.x} ${g.mouse.y}` ) // DEBUG
-  });
-  //---- start ticking....
+  }
+  window.addEventListener('resize', resize)
+  canvas.addEventListener('mousemove', (event) => { g.mouse = { x: event.clientX, y: h() - event.clientY }; LOGG( 'input', g.mouse ) })
+  resize();
   render_frame()
 }

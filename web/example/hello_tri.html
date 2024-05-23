@@ -14,6 +14,7 @@
     import { gl_viewport, gl_clear } from '/src/gl.js'
     import { vec4, rect, sin, cos, TWOPI } from '/src/vecmath.js'
     import { debug_open } from '/src/debug.js'
+    import { log_enable } from '/src/log.js'
 
     document.addEventListener('DOMContentLoaded', main)
 
@@ -21,6 +22,7 @@
       const container = document.getElementById('canvas')
       const g = await g_open({ backend: 'webgl2', parent: container })
       const debug = debug_open( g )
+      log_enable( ['resize'] )
       g_add_render( g, (rs) => {
         const trisize = 0.69
         gl_viewport   ( rs.gl, rect(0, 0, rs.w, rs.h) )

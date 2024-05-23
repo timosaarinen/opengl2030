@@ -18,22 +18,12 @@ export async function create_webgpu_context(config, canvas) {
     device: device,
     present_format: present_format,
     canvas: canvas,
-/*
-    submit_display_list: function(gl) {
-      LOG('display list submit -> WebGL2:', gl_tostring(gl))
-      for (const c of gl.cmd) {
-        switch(c.cmd) {
-          case 'viewport':  viewport(c.rect) break
-          case 'clear':     clear(c.color, c.depth, c.stencil) break
-          // TODO: cmds
-          default:          WARNING(`unknown command: ${c.cmd}`) break
-        }
-      }
-    }
-*/
+    // new_program:          (vshader, fshader)      => undefined,
+    // new_vertexbuffer:     (data, layout, program) => undefined,
+    // new_indexbuffer:      (data)                  => undefined,
+    // new_pipe:             (program, vb, ib)       => undefined,
+    // submit_display_list:  (displaylist)           => undefined,
   }
-
-  // TODO: falls back to WebGL, but keeps the initialized WebGPU fields
   const webgl2_context = create_webgl2_context(config, canvas)
   Object.assign(webgpu_context, webgl2_context) // mix WebGPU/WebGL2 objects -> webgpu_context
   return webgpu_context

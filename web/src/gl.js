@@ -1,6 +1,7 @@
-import { LOG, safe_stringify } from './util.js';
+import { safe_stringify } from './util.js'
+import { LOGG } from './log.js'
 
-const cmd = (gl, name, data) => { LOG(gl, name, data); gl.cmd.push({ cmd: name, ...data }) }
+const cmd = (gl, name, data) => { LOGG('gl', gl, name, data); gl.cmd.push({ cmd: name, ...data }) }
 
 export const gl_viewport            = (gl, rect)                  => cmd(gl, 'viewport', { rect } )
 export const gl_clear               = (gl, color, depth, stencil) => cmd(gl, 'clear', { color, depth, stencil } )
