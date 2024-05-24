@@ -52,7 +52,7 @@ uniform texture2D iChannel0;
 void main() {
   frag_color = v_color * texture(iChannel0, v_uv);
 }`
-export const fs_shadertoy_test = `#version 300 es
+export const fs_imageshader_test = `#version 300 es
 precision mediump float;
 uniform highp vec3 iResolution;
 uniform highp float iTime;
@@ -65,13 +65,19 @@ void main() {
   color *= vec3(sin(997.0 * iTime * uv.y));
   frag_color = vec4(color, 1.0);
 }`
-// "Let's self reflect" by mrange: https://www.shadertoy.com/view/XfyXRV
-export const fs_shadertoy_let_us_self_reflect_by_mrange = `#version 300 es
+export const fs_shadertoy_prefix = `#version 300 es
 precision mediump float;
-uniform vec3 iResolution;
-uniform float iTime;
+uniform highp vec3 iResolution;
+uniform highp float iTime;
+uniform highp vec4 iMouse;
 out vec4 frag_color;
-
+`
+export const fs_shadertoy_postfix = `
+void main() {
+  mainImage( frag_color, gl_FragCoord );
+}`
+// "Let's self reflect" by mrange: https://www.shadertoy.com/view/XfyXRV
+export const fs_shadertoy_let_us_self_reflect_by_mrange = fs_shadertoy_prefix + `
 // CC0: Let's self reflect
 //  Always enjoyed the videos of Platonic solids with inner mirrors
 //  I made some previous attempts but thought I make another attempt it
@@ -440,4 +446,5 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
   
   fragColor = vec4(col, 1.0);
 }
-`
+` + fs_shadertoy_postfix
+

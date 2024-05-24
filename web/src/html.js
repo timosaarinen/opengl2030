@@ -10,7 +10,7 @@ export const tohtml = (str) => {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;")
-  };
+  }
   // Escape HTML characters and replace newlines with <br> tags
   return escapeHtml(str).replace(/\n/g, '<br>')
 }

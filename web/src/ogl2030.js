@@ -21,7 +21,7 @@ export async function g_open(config) {
   ASSERT(backend)
   if (config.parent) config.parent.appendChild(canvas)
   //----> main OGL30 object
-  let ogl = {
+  let g = {
     config:   config,
     w:        w(),
     h:        h(),
@@ -31,7 +31,7 @@ export async function g_open(config) {
     rs:       { time: 0.0 }, // TODO: init with full render state?
     mouse:    { x: 0, y: 0 },
   }
-  return ogl
+  return g
 }
 export function g_add_render(g, fn) {
   g.renderfn.push(fn)
@@ -76,6 +76,6 @@ export function g_run_render_loop(g) {
   }
   window.addEventListener('resize', resize)
   canvas.addEventListener('mousemove', (event) => { g.mouse = { x: event.clientX, y: h() - event.clientY }; LOGG( 'input', g.mouse ) })
-  resize();
+  resize()
   render_frame()
 }

@@ -1,5 +1,5 @@
-import { WARNING, ASSERT } from './util.js'
-import { LOGG } from './log.js'
+import { WARNING, ASSERT, safe_stringify } from './util.js'
+import { LOGG, log_enablegroup } from './log.js'
 import { FLOAT } from './constants.js'
 import { gl_tostring } from './gl.js'
 
@@ -60,7 +60,7 @@ function new_vertexbuffer(webgl2, data, layout, program) {
   //   offset:        The byte offset (of the first component, i.e. offsetof(MyVertex, pos))
   //   stride:        # of bytes to the next (usually sizeof(MyVertex)) or can be 0 if no other data in between (here 0, as we only have array of vec2 positions)
   ASSERT(layout == 'vec2 a_position;') // TODO: parse layout -> attribs. Don't require program here, bind in g_new_pipe()
-  const attribs = [ {name: 'a_position', dim: 2, type: FLOAT, offset: 0, normalize: false} ];
+  const attribs = [ {name: 'a_position', dim: 2, type: FLOAT, offset: 0, normalize: false} ]
 
   const vb = webgl2.createBuffer()
   webgl2.bindBuffer(webgl2.ARRAY_BUFFER, vb)
@@ -86,21 +86,52 @@ function new_pipe( webgl2, program, vb, ib ) {
   return { type: 'pipe', program, vb, ib }
 }
 function use_pipe( webgl2, pipe ) {
-  ASSERT( pipe.vb.vertexarray );
-  use_program( webgl2, pipe.program );
+  ASSERT( pipe.vb.vertexarray )
+  use_program( webgl2, pipe.program )
   if (pipe.ib) {} // TODO:
-  webgl2.bindVertexArray( pipe.vb.vertexarray );
+  webgl2.bindVertexArray( pipe.vb.vertexarray )
 }
 function viewport( webgl2, rect ) {
   webgl2.viewport( rect.x, rect.y, rect.width, rect.height )
 }
 function clear( webgl2, color, depth, stencil ) {
-  let clearbits = 0;
+  let clearbits = 0
   if (color)   { clearbits |= webgl2.COLOR_BUFFER_BIT; webgl2.clearColor( color.x, color.y, color.z, color.w ) }
   if (depth)   { clearbits |= webgl2.DEPTH_BUFFER_BIT; webgl2.clearDepth( depth ) }
   if (stencil) { clearbits |= webgl2.STENCIL_BUFFER_BIT; webgl2.stencilMask( 0xFF ) } // TODO: stencil test
-  webgl2.clear( clearbits );
+  webgl2.clear( clearbits )
 }
+function upload_uniforms( webgl2, program, uniforms ) {
+  log_enablegroup('uniforms') // DEBUG
+  for (const key in uniforms) { if (uniforms.hasOwnProperty(key)) {
+    const u = uniforms[key]
+    const loc = webgl2.getUniformLocation(program.program, key) // TODO: cache these to 'program'
+    const type = typeof(u); // TODO: for C API, need to get type non-dynamic way
+    const v = u; // value (float, vec2, vec3, vec4, ...)
+    LOGG('uniforms-all', key, type, v.type, Array.isArray(u), safe_stringify(u)) // DEBUG
+    switch(typeof u) {
+      case 'number':
+        LOGG('uniforms', key, 'uniform1f', v); webgl2.uniform1f(loc, v); break
+      case 'object': {
+        if (Array.isArray(u)) {
+          switch(v.length) {
+            case (3 * 3): LOGG('uniforms', key, 'uniformMatrix3fv', v); webgl2.uniformMatrix3fv(loc, false, v); break
+            case (4 * 4): LOGG('uniforms', key, 'uniformMatrix4fv', v); webgl2.uniformMatrix4fv(loc, false, v); break
+            default:      WARNING(`Unsupported uniform array length for key ${key} = ${v}`);
+          }
+        } else {
+          ASSERT(v.type); // TODO: must have .type, other ways?
+          switch(v.type) {
+            case 'vec2':    LOGG('uniforms', key, 'uniform2f', v); webgl2.uniform2f(loc, v.x, v.y); break
+            case 'vec3':    LOGG('uniforms', key, 'uniform3f', v); webgl2.uniform3f(loc, v.x, v.y, v.z); break
+            case 'vec4':    LOGG('uniforms', key, 'uniform4f', v); webgl2.uniform4f(loc, v.x, v.y, v.z, v.w); break    
+          }
+        }
+      }
+    }
+  } }
+}
+
 function submit_display_list(webgl2, displaylist) {
   LOGG( 'backend', 'display list submit -> WebGL2:', gl_tostring(displaylist) )
   for (const c of displaylist.cmd) {
@@ -110,32 +141,12 @@ function submit_display_list(webgl2, displaylist) {
       case 'update_vertexbuffer': update_vertexbuffer(webgl2, c.vertexbuffer, c.data) ; break
       case 'update_indexbuffer':  update_indexbuffer (webgl2, c.indexbuffer, c.data) ; break
       case 'use_pipe':            use_pipe           (webgl2, c.pipe) ; break
+      case 'upload_uniforms':     upload_uniforms    (webgl2, c.program, c.uniforms) ; break
       case 'draw_vertices':       draw_vertices      (webgl2, c.prim, c.start, c.count) ; break
       case 'draw_indices':        draw_indices       (webgl2, c.prim, c.start, c.count) ; break
-      case 'draw_imageshader':    draw_imageshader   (webgl2, c.imageshader) ; break
       default:                    WARNING(`unknown command: ${c.cmd}`) ; break
     }
   }
-}
-//------------------------------------------------------------------------
-// TODO: clean this up
-function draw_imageshader(webgl2, pipe) {
-  const g = pipe.g // kludgy..
-  use_pipe( webgl2, pipe )
-  const program = pipe.program.program
-  const aPosition = webgl2.getAttribLocation(program, 'a_position')
-  const iResolution = webgl2.getUniformLocation(program, 'iResolution')
-  const iTime = webgl2.getUniformLocation(program, 'iTime')
-  const iMouse = webgl2.getUniformLocation(program, 'iMouse')
-  const positionBuffer = webgl2.createBuffer()
-  webgl2.bindBuffer(webgl2.ARRAY_BUFFER, positionBuffer)
-  webgl2.bufferData(webgl2.ARRAY_BUFFER, new Float32Array([-1.0, -1.0, 3.0, -1.0, -1.0, 3.0]), webgl2.STATIC_DRAW)
-  webgl2.enableVertexAttribArray(aPosition)
-  webgl2.vertexAttribPointer(aPosition, 2, webgl2.FLOAT, false, 0, 0)
-  webgl2.uniform3f(iResolution, canvas.width, canvas.height, 1.0)
-  webgl2.uniform1f(iTime, g.rs.time)
-  webgl2.uniform4f(iMouse, g.mouse.x, g.mouse.y, 0.0, 0.0)
-  webgl2.drawArrays(webgl2.TRIANGLES, 0, 3)
 }
 //------------------------------------------------------------------------
 export function create_webgl2_context(config, canvas) {

@@ -10,7 +10,7 @@ export const ASSERT  = (mustbetrue) => mustbetrue ? undefined : panic(JSON.strin
 // TODO:
 export function arrpush(arr, e) {
   const n = arr.length
-  arr.push(e);
+  arr.push(e)
   return n
 }
 export function safe_stringify(obj, indent = 2) {
@@ -29,6 +29,6 @@ export function safe_stringify(obj, indent = 2) {
     cache.clear()
     return result
   } catch (e) {
-    panic('Error stringifying object:', e);
+    panic('Error stringifying object:', e)
   }
 }
