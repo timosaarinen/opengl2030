@@ -102,13 +102,15 @@ function clear( webgl2, color, depth, stencil ) {
   webgl2.clear( clearbits )
 }
 function upload_uniforms( webgl2, program, uniforms ) {
-  log_enablegroup('uniforms') // DEBUG
+  //log_enablegroup('uniforms-loc') // DEBUG
+  use_program( webgl2, program )
   for (const key in uniforms) { if (uniforms.hasOwnProperty(key)) {
     const u = uniforms[key]
     const loc = webgl2.getUniformLocation(program.program, key) // TODO: cache these to 'program'
+    if (loc === null) continue; // unused by the shader (even if declared)
     const type = typeof(u); // TODO: for C API, need to get type non-dynamic way
     const v = u; // value (float, vec2, vec3, vec4, ...)
-    LOGG('uniforms-all', key, type, v.type, Array.isArray(u), safe_stringify(u)) // DEBUG
+    LOGG('uniforms-loc', loc, key, type, v.type, Array.isArray(u), safe_stringify(u)) // DEBUG
     switch(typeof u) {
       case 'number':
         LOGG('uniforms', key, 'uniform1f', v); webgl2.uniform1f(loc, v); break

@@ -5,9 +5,6 @@ import { create_webgl2_context } from './webgl2.js'
 import { create_webgpu_context } from './webgpu.js'
 import { create_nulldevice_context } from './nulldevice.js'
 
-const w = () => window.innerWidth
-const h = () => window.innerHeight
-
 export async function g_open(config) {
   const canvas = create_canvas(); ASSERT(canvas)
   const select_backend = config.backend ?? 'webgl2'
@@ -23,12 +20,11 @@ export async function g_open(config) {
   //----> main OGL30 object
   let g = {
     config:   config,
-    w:        w(),
-    h:        h(),
+    parent:   config.parent,
     canvas:   canvas,
     backend:  backend, // @see webgpu.js and webgl2.js
     renderfn: [], // render frame callbacks, in draw order
-    rs:       { time: 0.0 }, // TODO: init with full render state?
+    rs:       { time: 0.0, w: 0, h: 0 }, // TODO: init with full render state?
     mouse:    { x: 0, y: 0 },
   }
   return g
@@ -44,13 +40,25 @@ export function g_display_list(g, name = 'a display list') {
 }
 export function g_run_render_loop(g) {
   let start = performance.now(); const getSeconds = () => (performance.now() - start) / 1000
+  const canvas = g.canvas
   const render_frame = () => {
+    const w = canvas.clientWidth
+    const h = canvas.clientHeight
+    if (w !== g.rs.w || h !== g.rs.h) {
+      // resize: canvas to new display size
+      canvas.width = w
+      canvas.height = h
+      g.rs.w = w
+      g.rs.h = h
+      g.rs.aspect = w/h
+      LOGG( 'resize', `resize ${g.rs.w} ${g.rs.h} aspect ${g.rs.aspect} - window ${window.innerWidth} ${window.innerHeight}` )
+    }
     const secs = getSeconds()
     const rs = { g,
       gl:     g_display_list( g, 'main' ),
-      w:      w(),
-      h:      h(),
-      aspect: w() / h(),
+      w:      w,
+      h:      h,
+      aspect: w / h,
       frame:  g.frame,
       time:   secs,
       dt:     secs - g.rs.time,
@@ -62,20 +70,6 @@ export function g_run_render_loop(g) {
     g.backend.submit_display_list( rs.gl )  // submit the main display list for rendering -> backend
     requestAnimationFrame( render_frame )   // re-schedule for next V-sync (hopefully)
   }
-  const resize = () => {
-    const width = w()
-    const height = h()
-    if (width !== g.rs.w || height !== g.rs.h) {
-      // resize canvas to new display size
-      canvas.width = width
-      canvas.height = height
-      g.rs.w = width
-      g.rs.h = height
-      LOGG( 'resize', `resize ${w()} ${h()} aspect ${w()/h()} - window ${window.innerWidth} - ${window.innerHeight}` )
-    }
-  }
-  window.addEventListener('resize', resize)
-  canvas.addEventListener('mousemove', (event) => { g.mouse = { x: event.clientX, y: h() - event.clientY }; LOGG( 'input', g.mouse ) })
-  resize()
+  canvas.addEventListener('mousemove', (event) => { g.mouse = { x: event.clientX, y: g.rs.h - event.clientY }; LOGG( 'input', g.mouse ) })
   render_frame()
 }

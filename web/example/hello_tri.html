@@ -2,13 +2,14 @@
   <title>OGL2030 example: Hello, Triangle!</title>
   <style>
     body { margin: 0; background-color: #000; color: #FFF; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100vh; }
-    canvas { display: block; width: 100vw; height: 100vh; }
+    canvas { width: 100%; height: 100%; display: block; }
+    #canvas-container { width: 100%; height: 100%; display: block; }
     .caption, .logo { position: absolute; bottom: 10px; text-align: center; width: 100%; font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; }
     .caption { bottom: 30px; font-size: 24px; }
     .logo { bottom: 10px; font-size: 18px; color: #00FF00; text-shadow: 0 0 4px #00A000, 0 0 16px #00A000 }
   </style>
 </head><body>
-  <div id="canvas"></div>
+  <div id="canvas-container"></div>
   <script type="module">
     import { g_open, g_add_render, g_run_render_loop } from '/src/ogl2030.js';
     import { gl_viewport, gl_clear } from '/src/gl.js'
@@ -19,7 +20,7 @@
     document.addEventListener('DOMContentLoaded', main)
 
     async function main() {
-      const container = document.getElementById('canvas')
+      const container = document.getElementById('canvas-container')
       const g = await g_open({ backend: 'webgl2', parent: container })
       const debug = debug_open( g )
       log_enablegroups( ['resize'] )

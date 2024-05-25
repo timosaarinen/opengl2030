@@ -1,7 +1,7 @@
 import { safe_stringify } from './util.js'
 import { LOGG } from './log.js'
 import { TRIANGLES } from './constants.js'
-import { vec3, vec4 } from './vecmath.js'
+import { vec2, vec3, vec4 } from './vecmath.js'
 
 const cmd = (gl, name, data) => { LOGG('gl', gl, name, data); gl.cmd.push({ cmd: name, ...data }) }
 
@@ -20,12 +20,12 @@ export function gl_draw_imageshader(gl, pipe) {
   const g = pipe.g // kludgy..
   const program = pipe.program
   const uniforms = {
-    iResolution:  vec3(g.canvas.width, g.canvas.height, 1.0),
+    iResolution:  vec2(g.canvas.width, g.canvas.height),
     iTime:        g.rs.time,
     iMouse:       vec4(g.mouse.x, g.mouse.y, 0, 0),
     // TODO: combine with user uniforms
   }
-  gl_upload_uniforms( gl, pipe.program, uniforms );
+  gl_upload_uniforms( gl, pipe.program, uniforms )
   gl_use_pipe( gl, pipe ) // TODO: order?
   gl_draw_vertices( gl, TRIANGLES, 0, 3 )
 }
