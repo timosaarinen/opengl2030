@@ -59,12 +59,16 @@ uniform highp float iTime;
 uniform highp vec4 iMouse;
 out vec4 frag_color;
 void main() {
-  //frag_color = vec4(1.0, 0.0, 0.0, 1.0); return;
+  //frag_color = vec4(1.0, 0.0, 0.0, 1.0); return; // DEBUG:
   vec2 uv = gl_FragCoord.xy / iResolution.xy;
-  //frag_color = vec4(uv.x, uv.y, 0.0, 1.0); return;
+  //frag_color = vec4(uv.x, uv.y, 0.0, 1.0); return; // DEBUG:
   vec2 d = iMouse.xy - gl_FragCoord.xy;
-  vec3 color = vec3(0.1, 1.0, 0.1) * (0.3 + 0.7*mod(floor(uv.x * 42.0 + cos(iTime*0.07*uv.x + 0.01*d.x)*sin(iTime+7.0*uv.y)) + floor(uv.y * 42.0 + cos(0.01*d.y)), 2.0)) * 10000.0*pow(1.0/(1.0 + length(d)), 1.5 + abs(sin(iTime)));
-  color *= vec3(sin(997.0 * iTime * uv.y));
+  float anim = sin(2.0*iTime);
+  float aspect = iResolution.x / iResolution.y;
+  vec3 color = vec3(0.2, 1.0, 0.2) * (0.75 + 0.25*mod(floor(42.0*uv.x*aspect + cos(0.01*d.x + iTime)) + floor(42.0*uv.y + sin(0.01*d.y)), 2.0)) * 500.0*pow(1.0/(1.0 + length(d)), 1.64 + 0.2 * anim);
+  //color *= vec3(0.5 + 0.5*sin(997.0 * iTime * uv.y));
+  color += pow((1.0 - anim) / (1.0 + d.y), 0.25);
+  color *= color;
   frag_color = vec4(color, 1.0);
 }`
 export const fs_shadertoy_prefix = `#version 300 es
