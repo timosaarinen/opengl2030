@@ -1,7 +1,8 @@
-import { WARNING, ASSERT, safe_stringify } from './util.js'
+import { panic, WARNING, ASSERT, ASSERTM, safe_stringify } from './util.js'
 import { LOGG, log_enablegroup } from './log.js'
 import { FLOAT } from './constants.js'
 import { gl_tostring } from './gl.js'
+import { vectype, vectype_unsafe } from './vecmath.js'
 
 export const bufferdata           = (webgl2, buffer, srcdata)     => webgl2.bufferData(buffer.type, srcdata, webgl2.DYNAMIC_DRAW)
 export const use_vertexbuffer     = (webgl2, vbuffer)             => webgl2.bindBuffer(webgl2.ARRAY_BUFFER, vbuffer.buffer)
@@ -11,14 +12,34 @@ export const use_program          = (webgl2, program)             => webgl2.useP
 export const draw_vertices        = (webgl2, prim, start, count)  => webgl2.drawArrays(prim, start, count)
 export const draw_indexed         = (webgl2, prim, start, count)  => webgl2.drawElements(prim, count, webgl2.UNSIGNED_SHORT, start)
 //------------------------------------------------------------------------
+function parse_layout( layout ) {
+  // Layout 'vec2 a_position' example -> webgl2.vertexAttribPointer()
+  //   float, float (in Float32Array) -> 'in vec4 a_position' GLSL-es300 vertex shader attribute input (expanded vec2 -> vec4)
+  //
+  // Map two floats (vec2) starting at byte offset 0 to vertex shader's position attribute 'a_position', where
+  //   name -> index: The vertex attribute index from the name getAttribLocation('a_position')
+  //   dim:           Dimension / # of components 1, 2, 3 or 4 (here 2 for the two floats in vec2)
+  //   type:          Data type of each component in the array, BYTE/SHORT/UNSIGNED_BYTE/UNSIGNED_SHORT/FLOAT/HALF_FLOAT/INT/UNSIGNED_INT/INT_2_10_10_10_REV (here FLOAT for the 32-bit floats in vec2
+  //   normalize:     Tells whether to normalize signed types (BYTE/SHORT) -> [-1,1] or unsigned types -> [0,1] to the vertex shader attribute input value
+  //   offset:        The byte offset (of the first component, i.e. offsetof(MyVertex, pos))
+  //   stride:        # of bytes to the next (usually sizeof(MyVertex)) or can be 0 if no other data in between (here 0, as we only have array of vec2 positions)
+  switch( layout ) {
+    case 'vec2 a_position;': 
+      return [ {name: 'a_position', dim: 2, type: FLOAT, offset: 0, normalize: false} ]
+    case 'vec2 a_position; vec4 a_color;':
+      return [ {name: 'a_position', dim: 2, type: FLOAT, offset: 0,   normalize: false, stride: 6*4},
+               {name: 'a_color',    dim: 4, type: FLOAT, offset: 2*4, normalize: false, stride: 6*4} ]
+    default:
+      panic('TODO: parse layout -> WebGL attribute desc') // TODO: also don't require program here, bind in newpipe()
+  }
+}
 function load_shader(webgl2, type, source) {
   const shader = webgl2.createShader(type)
   webgl2.shaderSource(shader, source)
   webgl2.compileShader(shader)
   if (!webgl2.getShaderParameter(shader, webgl2.COMPILE_STATUS)) {
-    WARNING('An error occurred compiling the shaders: ' + webgl2.getShaderInfoLog(shader))
-    webgl2.deleteShader(shader)
-    return null
+    panic('An error occurred compiling the shaders: ' + webgl2.getShaderInfoLog(shader)) // TODO: was WARNING, but better to panic here?
+    webgl2.deleteShader(shader); return null
   }
   return shader
 }
@@ -31,7 +52,7 @@ function new_program(webgl2, vshader, fshader) {
   webgl2.attachShader(program, fs)
   webgl2.linkProgram(program)
   if (!webgl2.getProgramParameter(program, webgl2.LINK_STATUS)) {
-    WARNING('Unable to initialize the shader program: ' + webgl2.getProgramInfoLog(program))
+    panic('Unable to initialize the shader program: ' + webgl2.getProgramInfoLog(program)) // TODO: was WARNING, but better to panic here?
     return null
   }
   return { program, vshader, fshader }
@@ -49,33 +70,18 @@ function update_indexbuffer( webgl2, ib, data ) {
   webgl2.bufferData( webgl2.ELEMENT_ARRAY_BUFFER, data, webgl2.DYNAMIC_DRAW )
 }
 function new_vertexbuffer(webgl2, data, layout, program) {
-  // Layout 'vec2 a_position' example -> webgl2.vertexAttribPointer()
-  //   float, float (in Float32Array) -> 'in vec4 a_position' GLSL-es300 vertex shader attribute input (expanded vec2 -> vec4)
-  //
-  // Map two floats (vec2) starting at byte offset 0 to vertex shader's position attribute 'a_position', where
-  //   name -> index: The vertex attribute index from the name getAttribLocation('a_position')
-  //   dim:           Dimension / # of components 1, 2, 3 or 4 (here 2 for the two floats in vec2)
-  //   type:          Data type of each component in the array, BYTE/SHORT/UNSIGNED_BYTE/UNSIGNED_SHORT/FLOAT/HALF_FLOAT/INT/UNSIGNED_INT/INT_2_10_10_10_REV (here FLOAT for the 32-bit floats in vec2
-  //   normalize:     Tells whether to normalize signed types (BYTE/SHORT) -> [-1,1] or unsigned types -> [0,1] to the vertex shader attribute input value
-  //   offset:        The byte offset (of the first component, i.e. offsetof(MyVertex, pos))
-  //   stride:        # of bytes to the next (usually sizeof(MyVertex)) or can be 0 if no other data in between (here 0, as we only have array of vec2 positions)
-  ASSERT(layout == 'vec2 a_position;') // TODO: parse layout -> attribs. Don't require program here, bind in g_new_pipe()
-  const attribs = [ {name: 'a_position', dim: 2, type: FLOAT, offset: 0, normalize: false} ]
-
   const vb = webgl2.createBuffer()
   webgl2.bindBuffer(webgl2.ARRAY_BUFFER, vb)
   if (data) { webgl2.bufferData(webgl2.ARRAY_BUFFER, data, webgl2.STATIC_DRAW) }
-
   const vertexarray = webgl2.createVertexArray()
   webgl2.bindVertexArray(vertexarray)
-
+  const attribs = parse_layout( layout )
   for (const a of attribs) {
     const index = webgl2.getAttribLocation( program.program, a.name )
     webgl2.enableVertexAttribArray( index )
     webgl2.vertexAttribPointer( index, a.dim, a.type, a.normalize ?? false, a.stride ?? 0, a.offset ?? 0 )
   }
-  webgl2.bindVertexArray(null) // TODO: unbinded for "safety", but could skip - any real perf hit? -> Profile
-  
+  webgl2.bindVertexArray(null)
   return { vertexbuffer: vb, vertexarray, size: data ? data.length : 0 }
 }
 function update_vertexbuffer( webgl2, vb, data ) {
@@ -101,39 +107,41 @@ function clear( webgl2, color, depth, stencil ) {
   if (stencil) { clearbits |= webgl2.STENCIL_BUFFER_BIT; webgl2.stencilMask( 0xFF ) } // TODO: stencil test
   webgl2.clear( clearbits )
 }
-function upload_uniforms( webgl2, program, uniforms ) {
-  //log_enablegroup('uniforms-loc') // DEBUG
-  use_program( webgl2, program )
-  for (const key in uniforms) { if (uniforms.hasOwnProperty(key)) {
-    const u = uniforms[key]
-    const loc = webgl2.getUniformLocation(program.program, key) // TODO: cache these to 'program'
-    if (loc === null) continue; // unused by the shader (even if declared)
-    const type = typeof(u); // TODO: for C API, need to get type non-dynamic way
-    const v = u; // value (float, vec2, vec3, vec4, ...)
-    LOGG('uniforms-loc', loc, key, type, v.type, Array.isArray(u), safe_stringify(u)) // DEBUG
-    switch(typeof u) {
-      case 'number':
-        LOGG('uniforms', key, 'uniform1f', v); webgl2.uniform1f(loc, v); break
-      case 'object': {
-        if (Array.isArray(u)) {
-          switch(v.length) {
-            case (3 * 3): LOGG('uniforms', key, 'uniformMatrix3fv', v); webgl2.uniformMatrix3fv(loc, false, v); break
-            case (4 * 4): LOGG('uniforms', key, 'uniformMatrix4fv', v); webgl2.uniformMatrix4fv(loc, false, v); break
-            default:      WARNING(`Unsupported uniform array length for key ${key} = ${v}`);
-          }
-        } else {
-          ASSERT(v.type); // TODO: must have .type, other ways?
-          switch(v.type) {
-            case 'vec2':    LOGG('uniforms', key, 'uniform2f', v); webgl2.uniform2f(loc, v.x, v.y); break
-            case 'vec3':    LOGG('uniforms', key, 'uniform3f', v); webgl2.uniform3f(loc, v.x, v.y, v.z); break
-            case 'vec4':    LOGG('uniforms', key, 'uniform4f', v); webgl2.uniform4f(loc, v.x, v.y, v.z, v.w); break    
-          }
-        }
-      }
-    }
-  } }
-}
+// function new_uniform_buffer( webgl2, uniforms, layout ) {
 
+// }
+function upload_uniforms( webgl2, program, uniforms ) {
+  //log_enablegroup('uniforms-verbose') // DEBUG:
+  //log_enablegroup('uniform-set') // DEBUG:
+  use_program( webgl2, program )
+
+  //const objectBuffer = new_uniform_buffer( webgl2, { mvp: mat4() }, 'struct Object { mat4 mvp; }' ) // TODO:
+  //const Object = webgl2.getUniformLocation( program, 'Object' ) // TODO: cache?
+  //webgl2.bindBufferRange(webgl2.UNIFORM_BUFFER, Object, objectBuffer.webglbuffer, 0, objectBuffer.size)
+  const Object = program->GetUniformBlock("Object")
+  ASSERT( Object )
+  if (Object != NULL) { program->UniformBlockBinding(uniformBlock->uniformBlockIndex, Object) }
+
+  for (const key in uniforms) { if (uniforms.hasOwnProperty(key)) {
+    const v = uniforms[key]
+    // TODO: if (Array.isArray(v)) WARNING('TODO: support variable-length float/int/vecmathtype arrays, len', v.length)
+    const vtype = typeof v === 'number' ? 'float' : v.type // vectype(v) // TODO: for C API, need to get type non-dynamic way. Also, only vecmath.js types accepted, vecmath.js vectype(v)?
+    const vtype2 = vectype_unsafe(v) // TODO:
+    ASSERTM(v, vtype)
+    ASSERTM(v, vtype === vtype2)
+    const loc = webgl2.getUniformLocation(program.program, key) // TODO: cache these to 'program'
+    if (loc === null) continue; // unused by the shader (even if declared in the shader, "optimized away")
+    LOGG('uniforms-verbose', key, ':', vtype, '=', safe_stringify(v), 'loc', loc)
+    switch(vtype) {
+      case 'float': LOGG('uniform-set', key, 'uniform1f', v); webgl2.uniform1f(loc, v); break
+      case 'vec2':  LOGG('uniform-set', key, 'uniform2f', v); webgl2.uniform2f(loc, v.x, v.y); break
+      case 'vec3':  LOGG('uniform-set', key, 'uniform3f', v); webgl2.uniform3f(loc, v.x, v.y, v.z); break
+      case 'vec4':  LOGG('uniform-set', key, 'uniform4f', v); webgl2.uniform4f(loc, v.x, v.y, v.z, v.w); break
+      case 'mat2':  LOGG('uniform-set', key, 'uniformMatrix2fv', v); webgl2.uniformMatrix2fv(loc, false, v.m); break
+      case 'mat3':  LOGG('uniform-set', key, 'uniformMatrix3fv', v); webgl2.uniformMatrix3fv(loc, false, v.m); break
+      case 'mat4':  LOGG('uniform-set', key, 'uniformMatrix4fv', v); webgl2.uniformMatrix4fv(loc, false, v.n); break
+    } } }
+}
 function submit_display_list(webgl2, displaylist) {
   LOGG( 'backend', 'display list submit -> WebGL2:', gl_tostring(displaylist) )
   for (const c of displaylist.cmd) {
@@ -151,7 +159,7 @@ function submit_display_list(webgl2, displaylist) {
   }
 }
 //------------------------------------------------------------------------
-export function create_webgl2_context(config, canvas) {
+export async function create_webgl2_context(config, canvas) {
   const webgl2 = canvas.getContext('webgl2') // WebGL 2.0 (GLSL ES 3.00 #version 300 es)
   if( !webgl2 ) panic('You need a browser with WebGL 2.0 support')
   return {

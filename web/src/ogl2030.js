@@ -1,5 +1,5 @@
 import { create_canvas } from './html.js'
-import { LOGG, log_enableall, log_enablegroup, log_clearall } from './log.js'
+import { LOG, LOGG } from './log.js'
 import { ASSERT, safe_stringify } from './util.js'
 import { create_webgl2_context } from './webgl2.js'
 import { create_webgpu_context } from './webgpu.js'
@@ -8,11 +8,11 @@ import { create_nulldevice_context } from './nulldevice.js'
 export async function g_open(config) {
   const canvas = create_canvas(); ASSERT(canvas)
   const select_backend = config.backend ?? 'webgl2'
-  let backend
+  let backend = null
   switch(select_backend) {
-    case 'webgl2':  LOGG('WebGL2 backend selected.');     backend = create_webgl2_context(config, canvas); break
-    case 'webgpu':  LOGG('WebGPU backend selected.');     backend = await create_webgpu_context(config, canvas); break
-    case 'null':    LOGG('nulldevice backend selected.'); backend = create_nulldevice_context(config, canvas); break
+    case 'webgl2':  backend = await create_webgl2_context(config, canvas); LOG('OGL2030: WebGL2 backend selected.');  break
+    case 'webgpu':  backend = await create_webgpu_context(config, canvas); LOG('OGL2030: WebGPU backend selected.'); break
+    case 'null':    backend = await create_nulldevice_context(config, canvas); LOG('OGL2030: nulldevice backend selected.'); break
     default:        panic('Unsupported backend')
   }
   ASSERT(backend)
@@ -72,4 +72,7 @@ export function g_run_render_loop(g) {
   }
   canvas.addEventListener('mousemove', (event) => { g.mouse = { x: event.clientX, y: g.rs.h - event.clientY }; LOGG( 'input', g.mouse ) })
   render_frame()
+}
+export async function g_close(g) {
+  if (g.backend.close) { g.backend.close() }
 }

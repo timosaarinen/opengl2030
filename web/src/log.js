@@ -1,5 +1,6 @@
 export let log_enable_all = false
 export let log_group_enabled = {}
+export const LOG = (...args) => { console.log(...args) }
 export const LOGG = (loggroup, ...args) => { if (log_enable_all || log_group_enabled[loggroup]) { console.log(...args) } }
 export function log_clearall() { log_enable_all = false; log_group_enabled = {} }
 export function log_enableall() { log_enable_all = true }

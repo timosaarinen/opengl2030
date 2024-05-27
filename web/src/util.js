@@ -2,10 +2,11 @@ export let force_single_threaded = false // for debugging, can force single-thre
 
 export const vw      = () => (window.innerWidth)
 export const vh      = () => (window.innerHeight)
-export const fmt     = (str) => str;
+export const fmt     = (str) => str
 export const WARNING = (...args) => console.error(...args)
 export const panic   = (...args) => { throw new Error(...args) }
-export const ASSERT  = (mustbetrue) => mustbetrue ? undefined : panic(JSON.stringify(mustbetrue))
+export const ASSERT  = (mustbetrue)      => mustbetrue ? undefined : panic('assertion failed')
+export const ASSERTM = (msg, mustbetrue) => mustbetrue ? undefined : panic('assertion failed: ' + JSON.stringify(msg))
 
 // TODO:
 export function arrpush(arr, e) {

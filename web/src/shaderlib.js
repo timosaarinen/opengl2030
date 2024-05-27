@@ -5,17 +5,21 @@ void main() {
 }`
 export const vs_pos = `#version 300 es
 in vec4 a_position;
-uniform highp mat4 u_mvp;
+uniform Object {
+  uniform highp mat4 mvp;
+};
 void main() {
-  gl_Position = a_position * u_mvp;
+  gl_Position = a_position * mvp;
 }`
 export const vs_pos_color = `#version 300 es
 in vec4 a_position;
 in vec4 a_color;
 out vec4 v_color;
-uniform highp mat4 u_mvp;
+uniform Object {
+  uniform highp mat4 mvp;
+};
 void main() {
-  gl_Position = a_position * u_mvp;
+  gl_Position = a_position * mvp;
   v_color = a_color;
 }`
 export const vs_pos_uv_color = `#version 300 es
@@ -24,9 +28,11 @@ in vec4 a_color;
 in vec2 a_uv;
 out vec2 v_uv;
 out vec4 v_color;
-uniform highp mat4 u_mvp;
+uniform Object {
+  uniform highp mat4 mvp;
+};
 void main() {
-  gl_Position = a_position * u_mvp;
+  gl_Position = a_position * mvp;
   v_uv = a_uv;
   v_color = a_color;
 }`

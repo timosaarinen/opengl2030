@@ -1,4 +1,6 @@
 // TODO:
+const gl = document.querySelector('canvas').getContext('webgl2');
+if (!gl) alert('come on browser, WebGL2 at least!')
 
 const myvertexbuffer = g_new_buffer( g, 
   'vertexbuffer', 
