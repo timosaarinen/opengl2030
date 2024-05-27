@@ -4,9 +4,21 @@ import { ASSERT, safe_stringify } from './util.js'
 import { create_webgl2_context } from './webgl2.js'
 import { create_webgpu_context } from './webgpu.js'
 import { create_nulldevice_context } from './nulldevice.js'
+import { mat4, vec2, vec4 } from './vecmath.js'
+
+export const g_s_get_uniforms = (mvp = mat4(), w = 0, h = 0, time = 0, mx = 0, my = 0) => ({
+  mvp:          mvp,
+  iResolution:  vec2(w, h),         // vec2(g.canvas.width, g.canvas.height),
+  iTime:        time,               // g.rs.time,
+  iMouse:       vec4(mx, my, 0, 0), // vec4(g.mouse.x, g.mouse.y, 0, 0)
+})
 
 export async function g_open(config) {
   const canvas = create_canvas(); ASSERT(canvas)
+  // TODO: support user uniforms, combine with std ones
+  ASSERT(!config.uniforms)
+  config.uniforms = g_s_get_uniforms()
+  // backend selection & init
   const select_backend = config.backend ?? 'webgl2'
   let backend = null
   switch(select_backend) {
@@ -17,8 +29,8 @@ export async function g_open(config) {
   }
   ASSERT(backend)
   if (config.parent) config.parent.appendChild(canvas)
-  //----> main OGL30 object
-  let g = {
+  // @returns The main OGL30 context 'g'
+  return {
     config:   config,
     parent:   config.parent,
     canvas:   canvas,
@@ -27,7 +39,6 @@ export async function g_open(config) {
     rs:       { time: 0.0, w: 0, h: 0 }, // TODO: init with full render state?
     mouse:    { x: 0, y: 0 },
   }
-  return g
 }
 export function g_add_render(g, fn) {
   g.renderfn.push(fn)
@@ -45,23 +56,20 @@ export function g_run_render_loop(g) {
     const w = canvas.clientWidth
     const h = canvas.clientHeight
     if (w !== g.rs.w || h !== g.rs.h) {
-      // resize: canvas to new display size
-      canvas.width = w
+      canvas.width = w // resize: canvas to new display size
       canvas.height = h
-      g.rs.w = w
-      g.rs.h = h
-      g.rs.aspect = w/h
-      LOGG( 'resize', `resize ${g.rs.w} ${g.rs.h} aspect ${g.rs.aspect} - window ${window.innerWidth} ${window.innerHeight}` )
+      LOGG( 'resize', `resize ${w} ${h} aspect ${w / h} window ${window.innerWidth} ${window.innerHeight}` )
     }
     const secs = getSeconds()
     const rs = { g,
-      gl:     g_display_list( g, 'main' ),
-      w:      w,
-      h:      h,
-      aspect: w / h,
-      frame:  g.frame,
-      time:   secs,
-      dt:     secs - g.rs.time,
+      gl:       g_display_list( g, 'main' ),
+      w:        w,
+      h:        h,
+      aspect:   w / h,
+      frame:    g.frame,
+      time:     secs,
+      dt:       secs - g.rs.time,
+      uniforms: g_s_get_uniforms(mat4(), g.canvas.width, g.canvas.height, secs, g.mouse.x, g.mouse.y) // TODO:
     }
     LOGG( 'renderframe', safe_stringify( rs ) )
     g.rs = rs                               // TODO: need? ..diagnostics? g.rs.gl

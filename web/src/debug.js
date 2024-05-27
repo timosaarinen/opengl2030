@@ -9,7 +9,7 @@ export function debug_open(g) {
   const pink_vertexbuffer = g_new_vertexbuffer( g, null, 'vec2 a_position;', pink_program )
   const pink_pipe = g_new_pipe( g, pink_program, pink_vertexbuffer, null )
 
-  const vertexcolor_program = g_new_program( g, vs_pos_color, fs_vertexcolor ) // TODO: set u_mvp
+  const vertexcolor_program = g_new_program( g, vs_pos_color, fs_vertexcolor )
   const vertexcolor_vertexbuffer = g_new_vertexbuffer( g, null, 'vec2 a_position; vec4 a_color;', vertexcolor_program )
   const vertexcolor_pipe = g_new_pipe( g, vertexcolor_program, vertexcolor_vertexbuffer, null )
 

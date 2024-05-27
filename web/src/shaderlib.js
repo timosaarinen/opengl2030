@@ -1,68 +1,60 @@
+// TODO: this doesn't work with user uniforms, need a function
+export const ubo_shadercode = `\n
+precision highp float;
+uniform Uniforms {
+  uniform highp mat4        mvp;
+  uniform highp vec2        iResolution;  // shadertoy compat
+  uniform highp float       iTime;        // shadertoy compat
+  uniform highp vec4        iMouse;       // shadertoy compat
+};
+uniform highp sampler2D     iChannel0;    // shadertoy compat
+\n`
+export const vs_ubo_ref = `#version 300 es` + ubo_shadercode + `in vec4 a_position; void main() { gl_Position = a_position; }`
+export const fs_ubo_ref = `#version 300 es` + ubo_shadercode + `out vec4 frag_color; void main() { frag_color = vec4(1); }`
+//------------------------------------------------------------------------
 export const vs_pos_passthrough = `#version 300 es
 in vec4 a_position;
 void main() {
   gl_Position = a_position;
 }`
-export const vs_pos = `#version 300 es
+export const vs_pos = `#version 300 es` + ubo_shadercode + `
 in vec4 a_position;
-uniform Object {
-  uniform highp mat4 mvp;
-};
 void main() {
   gl_Position = a_position * mvp;
 }`
-export const vs_pos_color = `#version 300 es
-in vec4 a_position;
-in vec4 a_color;
+export const vs_pos_color = `#version 300 es` + ubo_shadercode + `
+in vec4 a_position; in vec4 a_color;
 out vec4 v_color;
-uniform Object {
-  uniform highp mat4 mvp;
-};
 void main() {
   gl_Position = a_position * mvp;
   v_color = a_color;
 }`
-export const vs_pos_uv_color = `#version 300 es
-in vec4 a_position;
-in vec4 a_color;
-in vec2 a_uv;
-out vec2 v_uv;
-out vec4 v_color;
-uniform Object {
-  uniform highp mat4 mvp;
-};
+export const vs_pos_uv_color = `#version 300 es` + ubo_shadercode + `
+in vec4 a_position; in vec4 a_color; in vec2 a_uv;
+out vec2 v_uv; out vec4 v_color;
 void main() {
   gl_Position = a_position * mvp;
   v_uv = a_uv;
   v_color = a_color;
 }`
-export const fs_pink = `#version 300 es
-precision mediump float;
+export const fs_pink = `#version 300 es` + ubo_shadercode + `
 out vec4 frag_color;
 void main() {
   frag_color = vec4(1.0, 0.0, 1.0, 1.0); // the traditional gamedev placeholder color: bright pink!
 }`
-export const fs_vertexcolor = `#version 300 es
-precision mediump float;
+export const fs_vertexcolor = `#version 300 es` + ubo_shadercode + `
 in vec4 v_color;
 out vec4 frag_color;
 void main() {
   frag_color = v_color;
 }`
-export const fs_texture = `#version 300 es
-precision mediump float;
-in vec4 v_color;
-in vec2 v_uv;
+export const fs_texture = `#version 300 es` + ubo_shadercode + `
+in vec4 v_color; in vec2 v_uv;
 out vec4 frag_color;
-uniform texture2D iChannel0;
 void main() {
   frag_color = v_color * texture(iChannel0, v_uv);
 }`
-export const fs_imageshader_test = `#version 300 es
-precision mediump float;
-uniform highp vec2 iResolution;
-uniform highp float iTime;
-uniform highp vec4 iMouse;
+export const fs_imageshader_test = `#version 300 es` + ubo_shadercode + `
 out vec4 frag_color;
 void main() {
   //frag_color = vec4(1.0, 0.0, 0.0, 1.0); return; // DEBUG:
@@ -78,13 +70,12 @@ void main() {
   frag_color = vec4(color, 1.0);
 }`
 export const fs_shadertoy_prefix = `#version 300 es
-precision mediump float;
 uniform highp vec3 iResolution;
 uniform highp float iTime;
 uniform highp vec4 iMouse;
 out vec4 frag_color;
 `
-export const fs_shadertoy_postfix = `
+export const fs_shadertoy_postfix = `\n
 void main() {
   mainImage( frag_color, gl_FragCoord );
 }`
@@ -457,6 +448,5 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
   vec3 col = effect(p, pp);
   
   fragColor = vec4(col, 1.0);
-}
-` + fs_shadertoy_postfix
+}` + fs_shadertoy_postfix
 

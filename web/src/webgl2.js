@@ -1,8 +1,13 @@
 import { panic, WARNING, ASSERT, ASSERTM, safe_stringify } from './util.js'
-import { LOGG, log_enablegroup } from './log.js'
+import { LOGG, LOGGO, log_enablegroup } from './log.js'
 import { FLOAT } from './constants.js'
 import { gl_tostring } from './gl.js'
-import { vectype, vectype_unsafe } from './vecmath.js'
+import { vs_ubo_ref, fs_ubo_ref } from './shaderlib.js' // TODO: should not be required?
+import { vectype, vecstoref32array } from './vecmath.js'
+
+const no_webgl2 = 'You need a browser with WebGL 2.0 support'
+const ubo_array_index = 0 // TODO: hard-coded, matters?
+const UBO_SIZE = 1024     // TODO: adjustable?
 
 export const bufferdata           = (webgl2, buffer, srcdata)     => webgl2.bufferData(buffer.type, srcdata, webgl2.DYNAMIC_DRAW)
 export const use_vertexbuffer     = (webgl2, vbuffer)             => webgl2.bindBuffer(webgl2.ARRAY_BUFFER, vbuffer.buffer)
@@ -55,6 +60,8 @@ function new_program(webgl2, vshader, fshader) {
     panic('Unable to initialize the shader program: ' + webgl2.getProgramInfoLog(program)) // TODO: was WARNING, but better to panic here?
     return null
   }
+  const ubi = webgl2.getUniformBlockIndex(program, 'Uniforms')
+  webgl2.uniformBlockBinding(program, ubi, ubo_array_index)
   return { program, vshader, fshader }
 }
 function new_indexbuffer(webgl2, data) {
@@ -107,42 +114,75 @@ function clear( webgl2, color, depth, stencil ) {
   if (stencil) { clearbits |= webgl2.STENCIL_BUFFER_BIT; webgl2.stencilMask( 0xFF ) } // TODO: stencil test
   webgl2.clear( clearbits )
 }
-// function new_uniform_buffer( webgl2, uniforms, layout ) {
-
-// }
-function upload_uniforms( webgl2, program, uniforms ) {
-  //log_enablegroup('uniforms-verbose') // DEBUG:
-  //log_enablegroup('uniform-set') // DEBUG:
-  use_program( webgl2, program )
-
-  //const objectBuffer = new_uniform_buffer( webgl2, { mvp: mat4() }, 'struct Object { mat4 mvp; }' ) // TODO:
-  //const Object = webgl2.getUniformLocation( program, 'Object' ) // TODO: cache?
-  //webgl2.bindBufferRange(webgl2.UNIFORM_BUFFER, Object, objectBuffer.webglbuffer, 0, objectBuffer.size)
-  const Object = program->GetUniformBlock("Object")
-  ASSERT( Object )
-  if (Object != NULL) { program->UniformBlockBinding(uniformBlock->uniformBlockIndex, Object) }
-
-  for (const key in uniforms) { if (uniforms.hasOwnProperty(key)) {
-    const v = uniforms[key]
-    // TODO: if (Array.isArray(v)) WARNING('TODO: support variable-length float/int/vecmathtype arrays, len', v.length)
-    const vtype = typeof v === 'number' ? 'float' : v.type // vectype(v) // TODO: for C API, need to get type non-dynamic way. Also, only vecmath.js types accepted, vecmath.js vectype(v)?
-    const vtype2 = vectype_unsafe(v) // TODO:
-    ASSERTM(v, vtype)
-    ASSERTM(v, vtype === vtype2)
-    const loc = webgl2.getUniformLocation(program.program, key) // TODO: cache these to 'program'
-    if (loc === null) continue; // unused by the shader (even if declared in the shader, "optimized away")
-    LOGG('uniforms-verbose', key, ':', vtype, '=', safe_stringify(v), 'loc', loc)
-    switch(vtype) {
-      case 'float': LOGG('uniform-set', key, 'uniform1f', v); webgl2.uniform1f(loc, v); break
-      case 'vec2':  LOGG('uniform-set', key, 'uniform2f', v); webgl2.uniform2f(loc, v.x, v.y); break
-      case 'vec3':  LOGG('uniform-set', key, 'uniform3f', v); webgl2.uniform3f(loc, v.x, v.y, v.z); break
-      case 'vec4':  LOGG('uniform-set', key, 'uniform4f', v); webgl2.uniform4f(loc, v.x, v.y, v.z, v.w); break
-      case 'mat2':  LOGG('uniform-set', key, 'uniformMatrix2fv', v); webgl2.uniformMatrix2fv(loc, false, v.m); break
-      case 'mat3':  LOGG('uniform-set', key, 'uniformMatrix3fv', v); webgl2.uniformMatrix3fv(loc, false, v.m); break
-      case 'mat4':  LOGG('uniform-set', key, 'uniformMatrix4fv', v); webgl2.uniformMatrix4fv(loc, false, v.n); break
-    } } }
+function new_uniform_buffer( webgl2, uniforms, capacity, ref_program ) {
+  log_enablegroup('ubo') // DEBUG:
+  const index = webgl2.getUniformBlockIndex(ref_program.program, 'Uniforms')
+  const size = webgl2.getActiveUniformBlockParameter(ref_program.program, index, webgl2.UNIFORM_BLOCK_DATA_SIZE)
+  const ubo = webgl2.createBuffer()
+  webgl2.bindBuffer(webgl2.UNIFORM_BUFFER, ubo)
+  ASSERTM(capacity >= size, "UBO capacity must be greater or equal than the actual shader-side size")
+  webgl2.bufferData(webgl2.UNIFORM_BUFFER, capacity, webgl2.DYNAMIC_DRAW)
+  webgl2.bindBuffer(webgl2.UNIFORM_BUFFER, null)
+  webgl2.bindBufferBase(webgl2.UNIFORM_BUFFER, ubo_array_index, ubo)
+  let varnames = []; for (const v in uniforms) { varnames.push(v) } // object -> array
+  const indices = webgl2.getUniformIndices(ref_program.program, varnames) // indices: number[]
+  const offsets = webgl2.getActiveUniforms(ref_program.program, indices, webgl2.UNIFORM_OFFSET);
+  LOGG('ubo', 'ubo offsets', safe_stringify(offsets))
+  const mapping = {}
+  for (let n = 0; n < varnames.length; ++n) {
+    const name = varnames[n]
+    mapping[name] = { index: indices[n], offset: offsets[n] }
+  }
+  return LOGGO('ubo', 'new ubo', { ubo, size, index, ubo_array_index, mapping })
 }
-function submit_display_list(webgl2, displaylist) {
+function newfloat32array(uniforms, numbytes, mapping) {
+  let numfloats = numbytes / 4
+  let arr = new Float32Array(numfloats) // TODO: alloc once
+  let count = 0
+  for (const key in uniforms) {
+    const byteoffset = mapping[key].offset
+    ASSERTM( 'uniforms must 4-byte aligned', byteoffset % 4 == 0 )
+    const floatoffset = byteoffset / 4 
+    const value = uniforms[key]
+    const numfloats = vecstoref32array(arr, floatoffset, value)
+    LOGG('ubo', '  ', key, vectype(value), ' -> offset', byteoffset, 'numbytes', numfloats * 4)
+    count++
+  }
+  LOGG('ubo', '  =>', count, '/',  Object.keys(mapping).length, 'uniforms set') // TODO: should require that all uniforms are set?
+  return arr
+}
+function update_uniforms( webgl2, ubo, uniforms ) {
+  LOGG('ubo', 'ubo', ubo, 'updating', ubo.size, 'bytes')
+  const array = newfloat32array(uniforms, ubo.size, ubo.mapping)
+  const offset = 0
+  webgl2.bindBuffer(webgl2.UNIFORM_BUFFER, ubo.ubo)
+  webgl2.bufferSubData(webgl2.UNIFORM_BUFFER, offset, array)
+  webgl2.bindBuffer(webgl2.UNIFORM_BUFFER, ubo.ubo)
+  //----------------------------------------------------------------------
+  // OLD non-UBO code for reference
+  //----------------------------------------------------------------------
+  // use_program( webgl2, program )
+  // for (const key in uniforms) { if (uniforms.hasOwnProperty(key)) {
+  //   const v = uniforms[key]
+  //   const vtype = typeof v === 'number' ? 'float' : v.type // vectype(v)
+  //   const vtype2 = vectype_unsafe(v)
+  //   ASSERTM(v, vtype)
+  //   ASSERTM(v, vtype === vtype2)
+  //   const loc = webgl2.getUniformLocation(program.program, key)
+  //   if (loc === null) continue; // unused by the shader (even if declared in the shader, "optimized away")
+  //   LOGG('uniforms-verbose', key, ':', vtype, '=', safe_stringify(v), 'loc', loc)
+  //   switch(vtype) {
+  //     case 'float': LOGG('uniform-set', key, 'uniform1f', v); webgl2.uniform1f(loc, v); break
+  //     case 'vec2':  LOGG('uniform-set', key, 'uniform2f', v); webgl2.uniform2f(loc, v.x, v.y); break
+  //     case 'vec3':  LOGG('uniform-set', key, 'uniform3f', v); webgl2.uniform3f(loc, v.x, v.y, v.z); break
+  //     case 'vec4':  LOGG('uniform-set', key, 'uniform4f', v); webgl2.uniform4f(loc, v.x, v.y, v.z, v.w); break
+  //     case 'mat2':  LOGG('uniform-set', key, 'uniformMatrix2fv', v); webgl2.uniformMatrix2fv(loc, false, v.m); break
+  //     case 'mat3':  LOGG('uniform-set', key, 'uniformMatrix3fv', v); webgl2.uniformMatrix3fv(loc, false, v.m); break
+  //     case 'mat4':  LOGG('uniform-set', key, 'uniformMatrix4fv', v); webgl2.uniformMatrix4fv(loc, false, v.n); break
+  //   } } }
+  //----------------------------------------------------------------------
+}
+function submit_display_list(webgl2, displaylist, the_ubo) {
   LOGG( 'backend', 'display list submit -> WebGL2:', gl_tostring(displaylist) )
   for (const c of displaylist.cmd) {
     switch(c.cmd) {
@@ -151,7 +191,7 @@ function submit_display_list(webgl2, displaylist) {
       case 'update_vertexbuffer': update_vertexbuffer(webgl2, c.vertexbuffer, c.data) ; break
       case 'update_indexbuffer':  update_indexbuffer (webgl2, c.indexbuffer, c.data) ; break
       case 'use_pipe':            use_pipe           (webgl2, c.pipe) ; break
-      case 'upload_uniforms':     upload_uniforms    (webgl2, c.program, c.uniforms) ; break
+      case 'update_uniforms':     update_uniforms    (webgl2, the_ubo, c.uniforms) ; break
       case 'draw_vertices':       draw_vertices      (webgl2, c.prim, c.start, c.count) ; break
       case 'draw_indices':        draw_indices       (webgl2, c.prim, c.start, c.count) ; break
       default:                    WARNING(`unknown command: ${c.cmd}`) ; break
@@ -161,7 +201,9 @@ function submit_display_list(webgl2, displaylist) {
 //------------------------------------------------------------------------
 export async function create_webgl2_context(config, canvas) {
   const webgl2 = canvas.getContext('webgl2') // WebGL 2.0 (GLSL ES 3.00 #version 300 es)
-  if( !webgl2 ) panic('You need a browser with WebGL 2.0 support')
+  if( !webgl2 ) { alert(no_webgl2); panic(no_webgl2) }
+  const ref_program = new_program( webgl2, vs_ubo_ref, fs_ubo_ref )
+  const ubo = new_uniform_buffer(webgl2, config.uniforms, UBO_SIZE, ref_program )
   return {
     name: 'WebGL 2.0',
     webgl2: webgl2,
@@ -170,6 +212,6 @@ export async function create_webgl2_context(config, canvas) {
     new_vertexbuffer:     (data, layout, program) => new_vertexbuffer( webgl2, data, layout, program ),
     new_indexbuffer:      (data)                  => new_indexbuffer( webgl2, data ),
     new_pipe:             (program, vb, ib)       => new_pipe( webgl2, program, vb, ib ),
-    submit_display_list:  (displaylist)           => submit_display_list( webgl2, displaylist ),
+    submit_display_list:  (displaylist)           => submit_display_list( webgl2, displaylist, ubo ),
   }
 }
