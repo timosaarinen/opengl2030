@@ -1,13 +1,38 @@
-// TODO: this doesn't work with user uniforms, need a function
+// TODO: dynamic shadergen, generate this from uniforms.js 'Uniforms'
 export const ubo_shadercode = `\n
 precision highp float;
 uniform Uniforms {
   uniform highp mat4        mvp;
-  uniform highp vec2        iResolution;  // shadertoy compat
-  uniform highp float       iTime;        // shadertoy compat
-  uniform highp vec4        iMouse;       // shadertoy compat
+  uniform highp mat4        object_to_world;
+  uniform highp mat4        object_to_view;
+  uniform highp mat4        world_to_proj;
+  uniform highp mat4        world_to_view;
+  uniform highp mat4        world_to_object;
+  uniform highp mat4        view_to_object;
+  uniform highp mat4        view_to_world;
+  uniform highp mat4        view_to_proj;
+  uniform highp mat4        proj_to_view;
+  uniform highp vec4        u0;
+  uniform highp vec4        u1;
+  uniform highp vec4        u2;
+  uniform highp vec4        u3;
+  uniform highp vec4        u4;
+  uniform highp vec4        u5;
+  uniform highp vec4        u6;
+  uniform highp vec4        u7;
+  uniform highp mat4        umtx0;
+  uniform highp mat4        umtx1;
+  uniform highp mat4        umtx2;
+  uniform highp mat4        umtx3;
+  uniform highp float       uvec[256];
+  uniform highp vec2        iResolution;
+  uniform highp float       iTime;
+  uniform highp vec4        iMouse;
 };
-uniform highp sampler2D     iChannel0;    // shadertoy compat
+uniform highp sampler2D     iChannel0;
+uniform highp sampler2D     iChannel1;
+uniform highp sampler2D     iChannel2;
+uniform highp sampler2D     iChannel3;
 \n`
 export const vs_ubo_ref = `#version 300 es` + ubo_shadercode + `in vec4 a_position; void main() { gl_Position = a_position; }`
 export const fs_ubo_ref = `#version 300 es` + ubo_shadercode + `out vec4 frag_color; void main() { frag_color = vec4(1); }`

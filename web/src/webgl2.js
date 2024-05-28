@@ -1,13 +1,14 @@
 import { panic, WARNING, ASSERT, ASSERTM, safe_stringify } from './util.js'
-import { LOGG, LOGGO, log_enablegroup } from './log.js'
+import { LOG, LOGG, LOGGO, log_enablegroup } from './log.js'
 import { FLOAT } from './constants.js'
 import { gl_tostring } from './gl.js'
 import { vs_ubo_ref, fs_ubo_ref } from './shaderlib.js' // TODO: should not be required?
 import { vectype, vecstoref32array } from './vecmath.js'
+import { UBO_ARRAY_INDEX, UBO_SIZE } from './uniforms.js'
+
+log_enablegroup('ubo') // DEBUG:
 
 const no_webgl2 = 'You need a browser with WebGL 2.0 support'
-const ubo_array_index = 0 // TODO: hard-coded, matters?
-const UBO_SIZE = 1024     // TODO: adjustable?
 
 export const bufferdata           = (webgl2, buffer, srcdata)     => webgl2.bufferData(buffer.type, srcdata, webgl2.DYNAMIC_DRAW)
 export const use_vertexbuffer     = (webgl2, vbuffer)             => webgl2.bindBuffer(webgl2.ARRAY_BUFFER, vbuffer.buffer)
@@ -60,8 +61,10 @@ function new_program(webgl2, vshader, fshader) {
     panic('Unable to initialize the shader program: ' + webgl2.getProgramInfoLog(program)) // TODO: was WARNING, but better to panic here?
     return null
   }
+  const active_uniforms = webgl2.getProgramParameter(program, webgl2.ACTIVE_UNIFORMS)
   const ubi = webgl2.getUniformBlockIndex(program, 'Uniforms')
-  webgl2.uniformBlockBinding(program, ubi, ubo_array_index)
+  webgl2.uniformBlockBinding(program, ubi, UBO_ARRAY_INDEX)
+  LOGG('ubo', '[vs]', vshader, '\n[fs]', fshader, '\n[ACTIVE_UNIFORMS]', active_uniforms)
   return { program, vshader, fshader }
 }
 function new_indexbuffer(webgl2, data) {
@@ -115,7 +118,6 @@ function clear( webgl2, color, depth, stencil ) {
   webgl2.clear( clearbits )
 }
 function new_uniform_buffer( webgl2, uniforms, capacity, ref_program ) {
-  log_enablegroup('ubo') // DEBUG:
   const index = webgl2.getUniformBlockIndex(ref_program.program, 'Uniforms')
   const size = webgl2.getActiveUniformBlockParameter(ref_program.program, index, webgl2.UNIFORM_BLOCK_DATA_SIZE)
   const ubo = webgl2.createBuffer()
@@ -123,29 +125,40 @@ function new_uniform_buffer( webgl2, uniforms, capacity, ref_program ) {
   ASSERTM(capacity >= size, "UBO capacity must be greater or equal than the actual shader-side size")
   webgl2.bufferData(webgl2.UNIFORM_BUFFER, capacity, webgl2.DYNAMIC_DRAW)
   webgl2.bindBuffer(webgl2.UNIFORM_BUFFER, null)
-  webgl2.bindBufferBase(webgl2.UNIFORM_BUFFER, ubo_array_index, ubo)
-  let varnames = []; for (const v in uniforms) { varnames.push(v) } // object -> array
+  webgl2.bindBufferBase(webgl2.UNIFORM_BUFFER, UBO_ARRAY_INDEX, ubo)
+  let varnames = [];
+  for (const v in uniforms) {
+    LOG('ubo', 'ubo uniform[', varnames.length, '] =', v)
+    varnames.push(v)
+  }
   const indices = webgl2.getUniformIndices(ref_program.program, varnames) // indices: number[]
+  for (let n = 0; n < indices.length; ++n) {
+    if (indices[n] === webgl2.INVALID_INDEX) {
+      //panic('new_uniform_buffer(): uniform: ', varnames[n], 'is invalid - check the naming') // TODO: fix panic args
+      panic(`new_uniform_buffer(): uniform '${varnames[n]}' is invalid - check the naming on host and shader-side.`)
+    }
+  }
   const offsets = webgl2.getActiveUniforms(ref_program.program, indices, webgl2.UNIFORM_OFFSET);
   LOGG('ubo', 'ubo offsets', safe_stringify(offsets))
   const mapping = {}
   for (let n = 0; n < varnames.length; ++n) {
     const name = varnames[n]
-    mapping[name] = { index: indices[n], offset: offsets[n] }
+    mapping[name] = LOGGO( 'ubo', { index: indices[n], offset: offsets[n] } )
   }
-  return LOGGO('ubo', 'new ubo', { ubo, size, index, ubo_array_index, mapping })
+  return LOGGO( 'ubo', { ubo, size, index, UBO_ARRAY_INDEX, mapping }, 'new ubo' )
 }
 function newfloat32array(uniforms, numbytes, mapping) {
   let numfloats = numbytes / 4
   let arr = new Float32Array(numfloats) // TODO: alloc once
   let count = 0
   for (const key in uniforms) {
+    const value = uniforms[key]
+    LOGG('ubo', '  ', key, vectype(value), uniforms[key], 'mapping', mapping[key])
     const byteoffset = mapping[key].offset
     ASSERTM( 'uniforms must 4-byte aligned', byteoffset % 4 == 0 )
     const floatoffset = byteoffset / 4 
-    const value = uniforms[key]
     const numfloats = vecstoref32array(arr, floatoffset, value)
-    LOGG('ubo', '  ', key, vectype(value), ' -> offset', byteoffset, 'numbytes', numfloats * 4)
+    LOGG('ubo', '     -> offset', byteoffset, 'numbytes', numfloats * 4)
     count++
   }
   LOGG('ubo', '  =>', count, '/',  Object.keys(mapping).length, 'uniforms set') // TODO: should require that all uniforms are set?
