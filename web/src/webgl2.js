@@ -105,7 +105,7 @@ function use_pipe( webgl2, pipe ) {
   webgl2.bindVertexArray( pipe.vb.vertexarray )
 }
 function viewport( webgl2, rect ) {
-  webgl2.viewport( rect.x, rect.y, rect.width, rect.height )
+  webgl2.viewport( rect.x, rect.y, rect.w, rect.h )
 }
 function clear( webgl2, color, depth, stencil ) {
   let clearbits = 0
