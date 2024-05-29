@@ -17,7 +17,7 @@ export const fvec = (len) =>                           ({ type: 'fvec', m: new F
 export const vec2 = (x, y = x) =>                      ({ type: 'vec2', x, y })
 export const vec3 = (x, y = x, z = y ?? x) =>          ({ type: 'vec3', x, y, z })
 export const vec4 = (x, y = x, z = y ?? x, w = 1.) =>  ({ type: 'vec4', x, y, z, w })
-export const color = (r, g = r, b = g ?? r, a = 1.) => ({ type: 'vec4', x, y, z, w })
+export const color = (r, g = r, b = g ?? r, a = 1.) => ({ type: 'vec4', r, g, b, a }) // TODO: need implicit color -> vec4
 export const rect = (x, y, w, h) =>                    ({ type: 'rect', x, y, w, h }) // TODO: should actually be x2/y2 bounds for faster shader inside test?
 export const sphere = (center, radius) =>              ({ type: 'sphere', center, radius })
 export const aabb = (center, extents) =>               ({ type: 'aabb', center, extents }) // TODO: this doesn't fit in vec4, uses?

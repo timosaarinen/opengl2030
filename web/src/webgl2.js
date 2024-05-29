@@ -6,7 +6,7 @@ import { vs_ubo_ref, fs_ubo_ref } from './shaderlib.js' // TODO: should not be r
 import { vectype, vecstoref32array } from './vecmath.js'
 import { UBO_ARRAY_INDEX, UBO_SIZE } from './uniforms.js'
 
-log_enablegroup('ubo') // DEBUG:
+//log_enablegroup('ubo') // DEBUG:
 
 const no_webgl2 = 'You need a browser with WebGL 2.0 support'
 
@@ -128,7 +128,7 @@ function new_uniform_buffer( webgl2, uniforms, capacity, ref_program ) {
   webgl2.bindBufferBase(webgl2.UNIFORM_BUFFER, UBO_ARRAY_INDEX, ubo)
   let varnames = [];
   for (const v in uniforms) {
-    LOG('ubo', 'ubo uniform[', varnames.length, '] =', v)
+    LOG('ubo', 'uniform[', varnames.length, '] =', v)
     varnames.push(v)
   }
   const indices = webgl2.getUniformIndices(ref_program.program, varnames) // indices: number[]

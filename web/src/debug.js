@@ -18,10 +18,10 @@ export function debug_open(g) {
   //----> debug
   return {
     color: (c) => debug_color = c,
-    triangle: (gl, x0, y0, x1, y1, x2, y2) => {
-      let vertexdata = new Float32Array([ x0, y0, debug_color.x, debug_color.y, debug_color.z, debug_color.w, 
-                                          x1, y1, debug_color.x, debug_color.y, debug_color.z, debug_color.w,
-                                          x2, y2, debug_color.x, debug_color.y, debug_color.z, debug_color.w ]) // 'vec2 a_position; vec4 a_color;'
+    triangle: (gl, x0, y0, x1, y1, x2, y2, c0 = debug_color, c1 = debug_color, c2 = debug_color) => {
+      let vertexdata = new Float32Array([ x0, y0, c0.r, c0.g, c0.b, c1.a, 
+                                          x1, y1, c1.r, c1.g, c1.b, c1.a,
+                                          x2, y2, c2.r, c2.g, c2.b, c1.a, ]) // 'vec2 a_position; vec4 a_color;'
       gl_update_vertexbuffer( gl, vertexcolor_vertexbuffer, vertexdata )
       gl_use_pipe( gl, vertexcolor_pipe )
       gl_draw_vertices( gl, TRIANGLES, 0, 3 )
