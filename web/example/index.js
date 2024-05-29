@@ -7,10 +7,11 @@ import { example_open as open_000 } from './000_hello_vertexcolor_tri.js'
 import { example_open as open_001 } from './001_hello_webgpu.js'
 
 const examples = [
-  { open: open_000, name: '000 - Hello, vertex color triangle!' },
-  { open: open_001, name: '001 - WebGPU initialization' },
+  { openfn: open_000, name: '000_Hello, vertex color triangle!' },
+  { openfn: open_001, name: '001_WebGPU initialization' },
 ]
-let example_current = 0
+
+let g = null
 let debug = null
 
 function render(rs) {
@@ -23,14 +24,30 @@ function render(rs) {
                          trisize * cos(rs.time + 1/3.0*TWOPI) / rs.aspect, trisize * sin(rs.time + 1/3.0*TWOPI),
                          trisize * cos(rs.time + 2/3.0*TWOPI) / rs.aspect, trisize * sin(rs.time + 2/3.0*TWOPI) )
 }
-
-async function main() {
+function example_open(openfn) {
+  openfn({ g, debug })
+}
+function get_parent_container() {
   const container = document.getElementById('canvas-container')
-  const g = await g_open({ parent: container })
+  return container
+}
+function example_ui() {
+  const name_element = document.getElementById('example-name')
+  const button_next = document.getElementById('button-next')
+  const button_prev = document.getElementById('button-prev')
+  let current = 0
+  function goto_example(n) { current = n; name_element.textContent = examples[n].name; example_open(examples[n].openfn) }
+  button_next.addEventListener('click', () => { goto_example((current + 1) % examples.length) })
+  button_prev.addEventListener('click', () => { goto_example((current - 1 + examples.length) % examples.length) })
+  return { goto_example }
+}
+async function main() {
+  g = await g_open({ parent: get_parent_container() })
   debug = debug_open( g )
   log_enablegroups( ['resize'] )
   g_add_render( g, render )
+  const ui = example_ui()
+  ui.goto_example(0)
   g_run_render_loop( g )
 }
-
 document.addEventListener('DOMContentLoaded', main)
