@@ -5,10 +5,12 @@ import { debug_open } from '/src/debug.js'
 import { log_enablegroups } from '/src/log.js'
 import { example_open as open_000 } from './000_hello_vertexcolor_tri.js'
 import { example_open as open_001 } from './001_hello_webgpu.js'
+import { example_open as open_002 } from './002_devgui.js'
 
 const examples = [
   { openfn: open_000, name: '000_Hello, vertex color triangle!' },
   { openfn: open_001, name: '001_WebGPU initialization' },
+  { openfn: open_002, name: '002_Developer GUI' },
 ]
 
 let g = null
@@ -37,8 +39,8 @@ function example_ui() {
   const button_prev = document.getElementById('button-prev')
   let current = 0
   function goto_example(n) { current = n; name_element.textContent = examples[n].name; example_open(examples[n].openfn) }
-  button_next.addEventListener('click', () => { goto_example((current + 1) % examples.length) })
-  button_prev.addEventListener('click', () => { goto_example((current - 1 + examples.length) % examples.length) })
+  if (button_next) button_next.addEventListener('click', () => { goto_example((current + 1) % examples.length) })
+  if (button_prev) button_prev.addEventListener('click', () => { goto_example((current - 1 + examples.length) % examples.length) })
   return { goto_example }
 }
 async function main() {

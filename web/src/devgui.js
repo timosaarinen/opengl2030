@@ -1,4 +1,7 @@
-import GUI from './ext/lilgui.js';
+import GUI from '/ext/lilgui.js'
+import { log_print_md } from './log.js'
+const print = (s) => log_print_md(s)
+const println = () => log_print_md('\n')
 // 'gui' can be the root or a folder.
 export function new_gui() { return new GUI() }
 export function uifolder (gui, name) { return gui.addFolder(name) } 

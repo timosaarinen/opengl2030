@@ -18,5 +18,8 @@ export function log_enablegroups(log_groups_array) {
   }
 }
 export function log_print_md(...args) {
-  document.getElementById(LOG_DIV).innerHtml += md2html(fmt(...args))
+  const s = fmt(...args)
+  const html = md2html(s)
+  LOG('PRINT:', html)
+  document.getElementById(LOG_DIV).innerHtml += html
 }

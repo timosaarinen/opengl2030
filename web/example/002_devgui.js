@@ -1,6 +1,7 @@
 import { g_add_render } from '/src/ogl2030.js';
 import { gl_viewport, gl_clear, gl_update_uniforms } from '/src/gl.js'
 import { vec4, color, rect, sin, cos, TWOPI } from '/src/vecmath.js'
+import { new_gui, guiexample } from '/src/devgui.js'
 
 let ctx = null; let g = null; let debug = null; function setctx(c) { ctx = c; g = c.g; debug = c.debug }
 
@@ -18,6 +19,8 @@ function render(rs) {
   drawtri( rs )
 }
 export async function example_open(examplecontext) {
+  const gui = new_gui()
+  guiexample(gui)
   setctx( examplecontext )
   g_add_render( g, render )
   return { close: async () => await g_close( g ) }
