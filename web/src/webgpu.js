@@ -1,6 +1,5 @@
-// TODO: wip, inits WebGPU, but falls back to WebGL for now
 import { panic } from './util.js'
-import { create_webgl2_context } from './webgl2.js'
+import { TODO, log_print_md } from './log.js'
 
 export async function create_webgpu_context(config, canvas) {
   const adapter = await navigator.gpu?.requestAdapter()
@@ -10,21 +9,20 @@ export async function create_webgpu_context(config, canvas) {
   if (!webgpu) { panic('WebGPU context not supported'); return null }
   const present_format = navigator.gpu.getPreferredCanvasFormat() // "rgba8unorm" | 'bgra8unorm'
   webgpu.configure({ device, format: present_format })
-  
-  const webgpu_context = {
+
+  log_print_md('# next-gen WebGPU.. _initialization_!\n') // DEBUG: TODO:
+
+  return {
     name: 'WebGPU',
     webgpu: webgpu,
     adapter: adapter,
     device: device,
     present_format: present_format,
     canvas: canvas,
-    // new_program:          (vshader, fshader)      => undefined,
-    // new_vertexbuffer:     (data, layout, program) => undefined,
-    // new_indexbuffer:      (data)                  => undefined,
-    // new_pipe:             (program, vb, ib)       => undefined,
-    // submit_display_list:  (displaylist)           => undefined,
+    new_program: (vshader, fshader)               => TODO('WebGPU new_program()'),
+    new_vertexbuffer: (g, data, layout, program)  => TODO('WebGPU new_vertexbuffer()'),
+    new_indexbuffer: (g, data)                    => TODO('WebGPU new_buffer()'),
+    new_pipe: (g, program, vb, ib)                => TODO('WebGPU new_pipe()'),
+    submit_display_list: (displaylist)            => TODO('WebGPU submit_display_list()'),
   }
-  const webgl2_context = create_webgl2_context(config, canvas)
-  Object.assign(webgpu_context, webgl2_context) // mix WebGPU/WebGL2 objects -> webgpu_context
-  return webgpu_context
 }

@@ -3,10 +3,7 @@ import { gl_viewport, gl_clear, gl_update_uniforms } from '/src/gl.js'
 import { vec4, color, rect, sin, cos, TWOPI } from '/src/vecmath.js'
 import { log_enablegroups } from '/src/log.js'
 
-let ctx = null
-let g = null
-let debug = null
-function setctx(c) { ctx = c; g = c.g; debug = c.debug }
+let ctx = null; let g = null; let debug = null; function setctx(c) { ctx = c; g = c.g; debug = c.debug }
 
 function drawtri(rs) {
   const trisize = 1.33
