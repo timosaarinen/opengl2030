@@ -93,9 +93,9 @@ export const srand = () => 2.0 * Math.random() - 1.0 //[-1,1]
 //------------------------------------------------------------------------
 //  3D vector math
 //------------------------------------------------------------------------
-export const dot(a, b) = a.x * b.x + a.y * b.y + a.z * b.z
-export const min3(a, b) = vec3(a.x < b.x ? a.x : b.x, a.y < b.y ? a.y : b.y, a.z < b.z ? a.z : b.z)
-export const max3(a, b) = vec3(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y, a.z > b.z ? a.z : b.z)
+export const dot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z
+export const min3 = (a, b) => vec3(a.x < b.x ? a.x : b.x, a.y < b.y ? a.y : b.y, a.z < b.z ? a.z : b.z)
+export const max3 = (a, b) => vec3(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y, a.z > b.z ? a.z : b.z)
 //------------------------------------------------------------------------
 // 2x2 transformation matrix functions
 //  - rotations 'a' are counter-clockwise radians
