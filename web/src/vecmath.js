@@ -1,8 +1,7 @@
 import { panic, safe_stringify, ASSERT } from './util.js'
-
-export const PI = Math.PI
-export const TWOPI = 2.0 * PI
-export const HALFPI = 0.5 * PI
+//------------------------------------------------------------------------
+//  Base types
+//------------------------------------------------------------------------
 export const FLOAT_SIZE = 4
 export const vectypes = [ 'float', 'fvec', 'vec2', 'vec3', 'vec4', 'color', 'sphere', 'rect', 'mat2', 'mat3', 'mat4', 'sphere', 'aabb' ]
 const bytesize = { 'float': 4, 'vec2': 8, 'vec3': 12, 'vec4': 16, 'color': 16, 'sphere': 16, 'rect': 16, 'mat2': 16, 'mat3': 36, 'mat4': 64 }
@@ -10,14 +9,13 @@ export const vectype = (v) => { if (typeof v === 'number') { return 'float'; }; 
 export const vectype_unsafe = (v) => (typeof v === 'number' ? 'float' : v.type)
 export const vecbytesize = (v) => (typeof v === 'number') ? FLOAT_SIZE : ((v.type === 'fvec') ? (v.m.length * FLOAT_SIZE) : bytesize[v.type])
 export const vecfloatsize = (v) => vecbytesize(v) / FLOAT_SIZE
-export const sin = (rad) => Math.sin(rad)
-export const cos = (rad) => Math.cos(rad)
 export const float = (x) =>                            ({ type: 'float', x }) // TODO: if accepting js 'number' as float, req?
 export const fvec = (len) =>                           ({ type: 'fvec', m: new Float32Array(len) })
 export const vec2 = (x, y = x) =>                      ({ type: 'vec2', x, y })
 export const vec3 = (x, y = x, z = y ?? x) =>          ({ type: 'vec3', x, y, z })
 export const vec4 = (x, y = x, z = y ?? x, w = 1.) =>  ({ type: 'vec4', x, y, z, w })
 export const color = (r, g = r, b = g ?? r, a = 1.) => ({ type: 'vec4', r, g, b, a }) // TODO: need implicit color -> vec4
+export const plane = (n, d) =>                         {{ type: 'vec4', n.x, n.y, n.z, d }} // plane ax + by + cz + d = 0, or n.x*x + n.y*y + n.z*z + d = 0, or dot(n,p) + d = 0
 export const rect = (x, y, w, h) =>                    ({ type: 'rect', x, y, w, h }) // TODO: should actually be x2/y2 bounds for faster shader inside test?
 export const sphere = (center, radius) =>              ({ type: 'sphere', center, radius })
 export const aabb = (center, extents) =>               ({ type: 'aabb', center, extents }) // TODO: this doesn't fit in vec4, uses?
@@ -75,4 +73,47 @@ export function vecstoref32array(arr, n, v) {
     case 'fvec':    for (let i = 0; i < v.m.length; ++i) { arr[n+i] = v.m[i]; }; return v.m.length
     default: panic('vecstoref32array(): unsupported type', safe_stringify(v))
   }
+}
+//------------------------------------------------------------------------
+//  Scalar math
+//------------------------------------------------------------------------
+export const PI = Math.PI
+export const TWOPI = 2.0 * PI
+export const HALFPI = 0.5 * PI
+export const sin = (rad) => Math.sin(rad)
+export const cos = (rad) => Math.cos(rad)
+export const pow = (x, e) => Math.pow(x, e)
+export const min = (a, b) => a < b ? a : b
+export const max = (a, b) => a > b ? a : b
+export const lerp = (minv, maxv, t) => minv + t * (maxv - minv)
+export const clamp = (x, minv, maxv) => min( maxv, x, max(0.0, 1.0) )   
+export const saturate = (x) => clamp( x, 0.0, 1.0 )
+export const urand = () => Math.random() //[0,1]
+export const srand = () => 2.0 * Math.random() - 1.0 //[-1,1]
+//------------------------------------------------------------------------
+//  3D vector math
+//------------------------------------------------------------------------
+export const dot(a, b) = a.x * b.x + a.y * b.y + a.z * b.z
+export const min3(a, b) = vec3(a.x < b.x ? a.x : b.x, a.y < b.y ? a.y : b.y, a.z < b.z ? a.z : b.z)
+export const max3(a, b) = vec3(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y, a.z > b.z ? a.z : b.z)
+//------------------------------------------------------------------------
+// 2x2 transformation matrix functions
+//  - rotations 'a' are counter-clockwise radians
+//------------------------------------------------------------------------
+export const rotation2d         = (a) => mat2( cos(a), -sin(a), sin(a),  cos(a) )
+export const scale2d_uniform    = (s) => mat2( s, 0.0, 0.0, s )
+export const scale2d            = (v) => mat2( v.x, 0.0, 0.0, v.y )
+export const shear2d            = (v) => mat2( 1, v.x, v.y, 1 )
+//------------------------------------------------------------------------
+// 4x4 transformation matrix functions
+//------------------------------------------------------------------------
+export const rotation_axis_angle = (axis, angle) => {
+  axis = normalize(axis)
+  const s = sin(angle)
+  const c = cos(angle)
+  const oc = 1.0 - c
+  return mat4( oc * axis.x * axis.x + c,          oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0,
+               oc * axis.x * axis.y + axis.z * s, oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0,
+               oc * axis.z * axis.x - axis.y * s, oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0,
+               0,                                 0,                                  0,                                  1 )
 }

@@ -1,7 +1,7 @@
 import { g_new_program, g_new_vertexbuffer, g_new_pipe, g_new_imageshader } from './resource.js'
 import { gl_update_vertexbuffer, gl_draw_vertices, gl_use_pipe, gl_draw_imageshader } from './gl.js'
 import { vs_pos_passthrough, vs_pos_color, fs_pink, fs_vertexcolor, fs_imageshader_test } from './shaderlib.js'
-import { vec4 } from './vecmath.js'
+import { color } from './vecmath.js'
 import { TRIANGLES } from './constants.js'
 
 export function debug_open(g) {
@@ -14,7 +14,7 @@ export function debug_open(g) {
   const vertexcolor_pipe = g_new_pipe( g, vertexcolor_program, vertexcolor_vertexbuffer, null )
 
   const imageshader = g_new_imageshader( g, fs_imageshader_test )
-  let debug_color = vec4(1, 0, 1, 1) // default debug color: traditional placeholder pink
+  let debug_color = color(1, 0, 1, 1) // default debug color: traditional placeholder pink
   //----> debug
   return {
     color: (c) => debug_color = c,
