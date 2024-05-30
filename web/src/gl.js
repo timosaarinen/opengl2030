@@ -1,11 +1,12 @@
 import { safe_stringify } from './util.js'
-import { LOGG } from './log.js'
+import { LOGG, log_enablegroup } from './log.js'
 import { TRIANGLES } from './constants.js'
-import { assert_rect, vec2, vec3, vec4 } from './vecmath.js'
+
+//log_enablegroup('gl') // DEBUG:
 
 const cmd = (gl, name, data) => { LOGG('gl', gl, name, data); gl.cmd.push({ cmd: name, ...data }) }
 
-export const gl_viewport            = (gl, rect)                  => cmd(gl, 'viewport', { rect: assert_rect(rect) } )
+export const gl_viewport            = (gl, rect)                  => cmd(gl, 'viewport', { rect: rect } )
 export const gl_clear               = (gl, color, depth, stencil) => cmd(gl, 'clear', { color, depth, stencil } )
 export const gl_update_vertexbuffer = (gl, vertexbuffer, data)    => cmd(gl, 'update_vertexbuffer', { vertexbuffer, data } )
 export const gl_update_indexbuffer  = (gl, indexbuffer, data)     => cmd(gl, 'update_indexbuffer', { indexbuffer, data } )

@@ -11,11 +11,11 @@
 </head><body>
   <div id="canvas-container"></div>
   <script type="module">
-    import { g_open, g_add_render, g_run_render_loop } from '/src/ogl2030.js';
-    import { gl_viewport, gl_clear, gl_update_uniforms } from '/src/gl.js'
-    import { vec4, rect, sin, cos, TWOPI } from '/src/vecmath.js'
-    import { debug_open } from '/src/debug.js'
-    import { log_enablegroups } from '/src/log.js'
+    import { g_open, g_add_render, g_run_render_loop } from '../src/ogl2030.js';
+    import { gl_viewport, gl_clear, gl_update_uniforms } from '../src/gl.js'
+    import { vec4, rect, sin, cos, TWOPI } from '../src/vecmath.js'
+    import { debug_open } from '../src/debug.js'
+    import { log_enablegroups } from '../src/log.js'
 
     document.addEventListener('DOMContentLoaded', main)
 
@@ -33,6 +33,7 @@
         debug.triangle( rs.gl, trisize * cos(rs.time)               / rs.aspect, trisize * sin(rs.time),
                                trisize * cos(rs.time + 1/3.0*TWOPI) / rs.aspect, trisize * sin(rs.time + 1/3.0*TWOPI),
                                trisize * cos(rs.time + 2/3.0*TWOPI) / rs.aspect, trisize * sin(rs.time + 2/3.0*TWOPI) )
+        debug.flush( rs.gl )
       })
       g_run_render_loop( g )
     }

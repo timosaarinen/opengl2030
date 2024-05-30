@@ -108,7 +108,7 @@ function use_pipe( webgl2, pipe ) {
   webgl2.bindVertexArray( pipe.vb.vertexarray )
 }
 function viewport( webgl2, rect ) {
-  webgl2.viewport( rect.x, rect.y, rect.w, rect.h )
+  webgl2.viewport( rect.x, rect.y, rect.z, rect.w ) // TODO: rect() -> vec4 components misleading here, deconstructor?
 }
 function clear( webgl2, color, depth, stencil ) {
   let clearbits = 0

@@ -1,8 +1,8 @@
-import { g_open, g_add_render, g_run_render_loop } from '/src/ogl2030.js';
-import { gl_viewport, gl_clear, gl_update_uniforms } from '/src/gl.js'
-import { vec4, rect, sin, cos, TWOPI } from '/src/vecmath.js'
-import { debug_open } from '/src/debug.js'
-import { log_enablegroups } from '/src/log.js'
+import { g_open, g_close, g_add_render, g_run_render_loop } from '../src/ogl2030.js';
+import { gl_viewport, gl_clear, gl_update_uniforms } from '../src/gl.js'
+import { vec4, rect, sin, cos, TWOPI } from '../src/vecmath.js'
+import { debug_open } from '../src/debug.js'
+import { log_enablegroups } from '../src/log.js'
 
 let ctx = null; let g = null; let debug = null; function setctx(c) { ctx = c; g = c.g; debug = c.debug }
 
@@ -17,6 +17,7 @@ function render(rs) {
   gl_viewport( rs.gl, rect(0, 0, rs.w, rs.h) )
   gl_clear( rs.gl, vec4(0.0, 0.0, 1.0, 1.0), 1.0 )
   drawtri( rs )
+  debug.flush( rs.gl )
 }
 export async function example_open(_ctx) {
   // create new WebGPU context and canvas element for this example

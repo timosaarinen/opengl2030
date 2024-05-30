@@ -1,4 +1,4 @@
-import GUI from '/ext/lilgui.js'
+import GUI from '../ext/lilgui.js'
 import { log_print_md } from './log.js'
 const print = (s) => log_print_md(s)
 const println = () => log_print_md('\n')
@@ -9,6 +9,7 @@ export function uibool   (gui, o, name) { gui.add(o, name) }
 export function uistring (gui, o, name) { gui.add(o, name) }
 export function uinumber (gui, o, name) { gui.add(o, name) }
 export function guiexample(gui) {
+  // TODO: fix this func:
   const myObject = {
     myBoolean: true,
     myFunction: function() { println('Hello from GUI!') },
