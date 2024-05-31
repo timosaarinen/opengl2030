@@ -23,7 +23,7 @@ export function debug_open(g) {
   const flush_vbuffer = (gl) => {
     gl_update_vertexbuffer( gl, vertexcolor_vertexbuffer, vbuffer )
     gl_use_pipe( gl, vertexcolor_pipe ) // TODO: per pipe buffers
-    gl_draw_vertices( gl, TRIANGLES, 0, 6 ) // TODO: quad + that buffer + flush!
+    gl_draw_vertices( gl, TRIANGLES, 0, vbuffer_n ) // TODO: quad + that buffer + flush!
     vbuffer_n = 0
   }
 

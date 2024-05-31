@@ -1,4 +1,6 @@
 // !! This file is not included, used for possible todo notes and random copy-paste !!
+<script type="module" src="index.js" async></script>
+
 export const box = (left, top, front, right, bottom, back)=>({ type: 'box', left, top, front, right, bottom, back }) // TODO: useful?
 
 time: vec4() // .x = t, .y = t^2, .z = t^3, .w = t^4
