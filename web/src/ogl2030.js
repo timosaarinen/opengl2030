@@ -1,6 +1,6 @@
 import { create_canvas } from './html.js'
 import { LOG, LOGG } from './log.js'
-import { ASSERT, safe_stringify } from './util.js'
+import { ASSERT, safe_stringify, arr_without, sleep_ms } from './util.js'
 import { create_webgl2_context } from './webgl2.js'
 import { create_webgpu_context } from './webgpu.js'
 import { create_nulldevice_context } from './nulldevice.js'
@@ -35,6 +35,12 @@ export async function g_open(config) {
 export function g_add_render(g, fn) {
   g.renderfn.push(fn)
 }
+export function g_remove_render(g, fn) {
+  g.renderfn = arr_without(g.renderfn, fn)
+}
+export function g_force_clear(g, color) {
+  if (g.backend.force_clear) g.backend.force_clear(color)
+}
 export function g_display_list(g, name = 'a display list') {
   return { g,
     name: name,
@@ -60,7 +66,7 @@ export function g_run_render_loop(g) {
       aspect:   w / h,
       frame:    g.frame,
       time:     secs,
-      dt:       secs - g.rs.time,
+      dt:       secs - g.rs.time, // TODO: clamp 'dt' if we have been inactive
       uniforms: uniforms_update(g.uniforms, mat4(), g.canvas.width, g.canvas.height, secs, g.mouse.x, g.mouse.y) // TODO:
     }
     LOGG( 'renderframe', safe_stringify( rs ) )
@@ -68,11 +74,26 @@ export function g_run_render_loop(g) {
     for (const fn of g.renderfn) fn( rs )   // execute the render callbacks
     LOGG( 'g', safe_stringify(g) )
     g.backend.submit_display_list( rs.gl )  // submit the main display list for rendering -> backend
-    requestAnimationFrame( render_frame )   // re-schedule for next V-sync (hopefully)
+    if( !g.closed ) g.raf = requestAnimationFrame( render_frame )   // re-schedule for next V-sync (hopefully)
   }
-  canvas.addEventListener('mousemove', (event) => { g.mouse = { x: event.clientX, y: g.rs.h - event.clientY }; LOGG( 'input', g.mouse ) })
-  render_frame()
+  g.on_mousemove = (event) => { g.mouse = { x: event.clientX, y: g.rs.h - event.clientY }; LOGG( 'input', g.mouse ) }
+  canvas.addEventListener('mousemove', g.on_mousemove)
+  g.raf = requestAnimationFrame( render_frame ) //render_frame()
+}
+export async function g_wait_nframes(g, numframes) {
+  await sleep_ms(numframes*20) // TODO: temp
 }
 export async function g_close(g) {
+  // TODO: check
+  g.closed = true
+  g.canvas.removeEventListener('mousemove', g.on_mousemove) // TODO: push into a list, remove all handlers with one call -> util.js
+  cancelAnimationFrame(g.raf)
   if (g.backend.close) { g.backend.close() }
+  g.config = null
+  g.uniforms = null
+  g.canvas = null
+  g.backend = null
+  g.renderfn = null
+  g.rs = null
+  g.mouse = null
 }

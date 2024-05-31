@@ -3,6 +3,9 @@ export const WARNING = (...args) => console.error(...args)
 export const panic   = (...args) => { throw new Error(...args) }
 export const ASSERT  = (mustbetrue)      => mustbetrue ? undefined : panic('assertion failed')
 export const ASSERTM = (msg, mustbetrue) => mustbetrue ? undefined : panic('assertion failed: ' + JSON.stringify(msg))
+export const arr_without = (arr, wo) => arr.filter( e => e !== wo )
+export const timeout_promise = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+export const sleep_ms = async (ms) => await( timeout_promise(ms) )
 //------------------------------------------------------------------------
 //  String utils
 //------------------------------------------------------------------------

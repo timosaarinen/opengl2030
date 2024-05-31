@@ -1,10 +1,10 @@
-import { g_open, g_close, g_add_render, g_run_render_loop } from '../src/ogl2030.js';
+import { g_open, g_close, g_force_clear, g_add_render, g_run_render_loop, g_remove_render } from '../src/ogl2030.js';
 import { gl_viewport, gl_clear, gl_update_uniforms } from '../src/gl.js'
 import { vec4, rect, sin, cos, TWOPI } from '../src/vecmath.js'
 import { debug_open } from '../src/debug.js'
 import { log_enablegroups } from '../src/log.js'
 
-let ctx = null; let g = null; let debug = null; function setctx(c) { ctx = c; g = c.g; debug = c.debug }
+let debug = null
 
 function drawtri(rs) {
   const trisize = 0.42
@@ -19,7 +19,9 @@ function render(rs) {
   drawtri( rs )
   debug.flush( rs.gl )
 }
-export async function example_open(_ctx) {
+export async function example_open(ctx) {
+  g_force_clear( ctx.g, vec4(0) )
+  // NOTE: unlike most examples, creates and destroys own context with g_open() / g_close() 
   // create new WebGPU context and canvas element for this example
   const parent = document.createElement( 'div' )
   parent.id = 'webgpu-container'
@@ -29,11 +31,11 @@ export async function example_open(_ctx) {
   parent.style.color = 'white'
   parent.innerHTML = 'WebGPU canvas here (this text should not be visible)'
   //document.getElementById( 'example-container' ).appendChild( parent )
-  g = await g_open({ backend: 'webgpu', parent })
+  const g = await g_open({ backend: 'webgpu', parent })
   debug = debug_open( g )
   debug.color( vec4(1,1,1,1) )  
   log_enablegroups( ['resize'] )
   g_add_render( g, render )
   g_run_render_loop( g )
-  return { close: async () => await g_close( g ) }
+  return { close: async () => { await g_close( g ); parent.remove() } } // NOTE: this does g_close() with own context
 }

@@ -8,9 +8,9 @@ import { example_open as open_001 } from './001_hello_webgpu.js'
 import { example_open as open_002 } from './002_devgui.js'
 
 const examples = [
-  { openfn: open_000, name: '000_Hello, vertex color triangle!' },
-  { openfn: open_001, name: '001_WebGPU initialization' },
-  { openfn: open_002, name: '002_Developer GUI' },
+  { openfn: open_000, name: '000 - Hello, vertex color triangle!' },
+  { openfn: open_001, name: '001 - WebGPU initialization' },
+  { openfn: open_002, name: '002 - Dev GUI' },
 ]
 
 let g = null

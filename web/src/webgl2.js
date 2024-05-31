@@ -221,6 +221,7 @@ export async function create_webgl2_context(config, canvas) {
     name: 'WebGL 2.0',
     webgl2: webgl2,
     canvas: canvas,
+    force_clear:          (color)                 => clear( webgl2, color, 1.0 ),
     new_program:          (vshader, fshader)      => new_program( webgl2, vshader, fshader ),
     new_vertexbuffer:     (data, layout, program) => new_vertexbuffer( webgl2, data, layout, program ),
     new_indexbuffer:      (data)                  => new_indexbuffer( webgl2, data ),
