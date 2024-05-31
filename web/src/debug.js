@@ -15,7 +15,7 @@ export function debug_open(g) {
   const vertexcolor_pipe = g_new_pipe( g, vertexcolor_program, vertexcolor_vertexbuffer, null )
 
   const imageshader = g_new_imageshader( g, fs_imageshader_test )
-  const VBUFFER_LEN = 64*1024
+  const VBUFFER_LEN = 4*1024*1024 // 16MB
   const vbuffer = new Float32Array( VBUFFER_LEN )
   let vbuffer_n = 0
   let debug_color = color(1, 0, 1, 1) // default debug color: traditional placeholder pink
