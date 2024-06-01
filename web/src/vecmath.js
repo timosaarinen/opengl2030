@@ -1,3 +1,4 @@
+"use strict"
 import { panic, safe_stringify, ASSERT } from './util.js'
 //------------------------------------------------------------------------
 //  Base types
@@ -18,7 +19,8 @@ export const color = (r = 0, g = r, b = g ?? r, a = 1.) =>  ({ type: 'vec4',   x
 export const plane = (n = vec3(0), d) =>                    ({ type: 'vec4',   x: n.x,       y: n.y,       z: n.z,       w: d      }) // plane ax + by + cz + d = 0
 export const rect = (x = 0, y = 0, w = 0, h = 0) =>         ({ type: 'vec4',   x,            y,            z: w,         w: h      }) // TODO: should actually be x2/y2 bounds for faster shader inside test?
 export const sphere = (center = vec3(0), radius = 0) =>     ({ type: 'vec4',   x: center.x,  y: center.y,  z: center.z,  w: radius })
-export const aabb = (center = vec3(0), extents = vec3(0)) =>({ type: 'aabb', center, extents }) // TODO: this doesn't fit in vec4, uses?
+export const aabb = (center = vec3(0), extents = vec3(0)) =>({ type: 'aabb', center, extents })
+export const frustum = (l, t, r, b, near, far) =>           ({ type: 'frustum', l, t, r, b, near, far })
 export const mat2 = (m00 = 1, m01 = 0, m10 = 0, m11 = 1) => ({ type: 'mat2', m: new Float32Array([ // TODO: would fit into vec4, but keep 'mat2' for 'm'
   m00, m01,
   m10, m11]) })
@@ -110,16 +112,22 @@ export const distancesquared3 = (a, b) => lensquared3( sub3(b, a) )
 export const distance3 = (a, b) => len3( sub3(b,a) )
 export const cross = (b, c) => vec3(  b.y*c.z - b.z*c.y,  b.z*c.x - b.x*c.z,  b.x*c.y - b.y*c.x )
 //------------------------------------------------------------------------
-// 2x2 transformation matrix functions (ccw radian angles)
+// 2x2 transformation matrix functions (ccw radian angles) - TODO: rename to rotate2() etc
 //------------------------------------------------------------------------
 export const rotation2d         = (a) => mat2( cos(a), -sin(a), sin(a),  cos(a) )
 export const scale2d_uniform    = (s) => mat2( s, 0.0, 0.0, s )
 export const scale2d            = (v) => mat2( v.x, 0.0, 0.0, v.y )
 export const shear2d            = (s) => mat2( 1, s.x, s.y, 1 )
 //------------------------------------------------------------------------
-// 4x4 transformation matrix functions
+// 4x4 transformation matrix functions - TODO: rename to identity4() etc
 //------------------------------------------------------------------------
-export const rotation_axis_angle = (axis, angle) => {
+export const mat4identity = ()                => { return mat4(1,0,0,0,    0,1,0,0,    0,0,1,0,    0,0,0,1        )}
+export const mat4translate = (v)              => { return mat4(1,0,0,0,    0,1,0,0,    0,0,1,0,    v.x,v.y,v.z,1  )} 
+export const mat4scale = (v)                  => { return mat4(v.x,0,0,0,  0,v.y,0,0,  0,0,v.z,0,  0,0,0,1        )}
+export const mat4rotate_x = (angle)           => { const c = cos(angle); const s = sin(angle); return mat4(1,0,0, 0,  0, c,s,0,  0, -s, c, 0,  0, 0, 0, 1)  }
+export const mat4rotate_y = (angle)           => { const c = cos(angle); const s = sin(angle); return mat4(c,0,-s,0,  0, 1,0,0,  s, 0,  c, 0,  0, 0, 0, 1)  }
+export const mat4rotate_z = (angle)           => { const c = cos(angle); const s = sin(angle); return mat4(c,s,0, 0,  -s,c,0,0,  0, 0, 1, 0,   0, 0, 0, 1)  }
+export const mat4axisangle = (axis, angle)    => {
   axis = normalize(axis); const s = sin(angle); const c = cos(angle); const oc = 1.0 - c
   return mat4( oc * axis.x * axis.x + c,          oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0,
                oc * axis.x * axis.y + axis.z * s, oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0,
@@ -133,3 +141,26 @@ export const mat4vec4mul = (m, v) => { // TODO: generic, but.. m * vec3
                 x*m[8]  + y*m[9]  + z*m[10] + w*m[11],
                 x*m[12] + y*m[13] + z*m[14] + w*m[15] )
 }
+export const mat4mul = (a, b) => { // TODO: optimize (unroll?)
+  let m = mat4()
+  for (let i=0; i < 4; ++i) {
+    for (let j=0; j < 4; ++j) {
+      let acc = 0;
+      for (let k=0; k < 4; ++k) {
+        acc += a.m[i*4 + k] * b.m[k*4 + j]
+      }
+      m.m[i*4 + j] = acc;
+    }
+  }
+  return m;
+}
+export const mat4perspective = (frustum) =>
+  mat4( 2*frustum.near / (frustum.r - frustum.l),   0,                                            (frustum.r + frustum.l) / (frustum.r - frustum.l),  0,
+        0,                                          2*frustum.near / (frustum.t - frustum.b),     (frustum.t + frustum.b) / (frustum.t - frustum.b),  0,
+        0,                                          2*frustum.near / (frustum.t - frustum.b),     (frustum.t + frustum.b) / (frustum.t - frustum.b),  -2*frustum.far*frustum.near / (frustum.far - frustum.near),
+        0,                                          0,                                            -1,                                                 0 )
+export const mat4ortho = (width, height, depth, flipy = -1) =>
+  mat4( 2/width,  0,                0,        0,
+        0,        flipy*2/height,   0,        0,
+        0,        0,                2/depth,  0, 
+        -1,       1,                0,        1 )
