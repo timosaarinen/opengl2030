@@ -35,13 +35,6 @@ typedef struct g_renderstate_t {
 
 typedef void (*g_renderfn_t)(g2030* g, g_renderstate* rs);
 
-// TODO: vecmath.h
-static const f32 PI      = 3.141592;
-static const f32 TWOPI   = 2.f * 3.141592;
-static const f32 HALFPI  = 0.5f * 3.141592;
-static inline float cos(float a) { return cosf(a); }
-static inline float sin(float a) { return sinf(a); }
-
 extern g2030* g_open          (const g_config* config);
 extern void g_add_render      (g2030* gl, g_renderfn_t fn);
 extern void g_run_render_loop (g2030* gl);

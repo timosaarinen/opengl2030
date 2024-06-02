@@ -1,12 +1,13 @@
 #include <g2030.h>
+#include <vecmath.h>
 
 void myrender(g2030* g, g_renderstate* rs) {
   const float t = rs->time;
   const float trisize = 0.5f;
   g_debug_tri( g,
-     trisize * cos(t), trisize * sin(t),
-     trisize * cos(t + 1/3.0f*TWOPI), trisize * sin(t + 1/3.0f*TWOPI),
-     trisize * cos(t + 2/3.0f*TWOPI), trisize * sin(t + 2/3.0f*TWOPI) );
+     trisize * cosf(t), trisize * sinf(t),
+     trisize * cosf(t + 1/3.0f*TWOPI), trisize * sinf(t + 1/3.0f*TWOPI),
+     trisize * cosf(t + 2/3.0f*TWOPI), trisize * sinf(t + 2/3.0f*TWOPI) );
 }
 
 int main() {

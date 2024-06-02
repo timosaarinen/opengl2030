@@ -48,14 +48,14 @@ static void renderstate_init(g_renderstate* rs) {
 g2030* g_open(const g_config* config) {
   LOG("%s mode:0x%x debug:%d vsync:%d\n", log_prefix, config->mode, config->debug, config->vsync);
 
-  gl* gl = memalloc(sizeof(struct g_t));
-  renderstate_init(&gl->renderstate);
-  gl->renderfn = 0;
+  gl* g = memalloc(sizeof(struct g_t));
+  renderstate_init(&g->renderstate);
+  g->renderfn = 0;
 
-  return gl;
+  return g;
 }
 void g_add_render(g2030* g, g_renderfn_t fn) {
-  gl->renderfn = fn; 
+  g->renderfn = fn; 
 }
 void g_debug_tri(g2030* g, f32 x0, f32 y0, f32 x1, f32 y1, f32 x2, f32 y2) {
   LOG("%s Pushing debug triangle draw: vec2(%f, %f), vec2(%f, %f), vec2(%f, %f)\n", 
@@ -64,12 +64,12 @@ void g_debug_tri(g2030* g, f32 x0, f32 y0, f32 x1, f32 y1, f32 x2, f32 y2) {
 void g_run_render_loop(g2030* g) {
   LOG("%s Running renderloop..\n", log_prefix);
   while(1) {
-    g_renderstate* rs = &gl->renderstate;
+    g_renderstate* rs = &g->renderstate;
     rs->dt = 1/60.f; // TODO: realtime
 
     LOG("%s Frame %" PRIu64 " time:%f dt:%f\n", log_prefix, rs->frame, rs->time, rs->dt);
-    if (gl->renderfn) {
-      gl->renderfn(gl, rs);
+    if (g->renderfn) {
+      g->renderfn(g, rs);
     }
 
     rs->frame++;
