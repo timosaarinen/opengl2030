@@ -1,4 +1,4 @@
-#include <ogl2030.h>
+#include <g2030.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -20,7 +20,7 @@ typedef struct g_t {
 //------------------------------------------------------------------------
 // internal functions
 //------------------------------------------------------------------------
-static const char* log_prefix = "OGL:";
+static const char* log_prefix = "G2030:";
 
 static void* memalloc(size_t bytes) {
   void* p = malloc(bytes);
@@ -45,7 +45,7 @@ static void renderstate_init(g_renderstate* rs) {
 //------------------------------------------------------------------------
 // public API
 //------------------------------------------------------------------------
-OGL* g_open(const g_config* config) {
+g2030* g_open(const g_config* config) {
   LOG("%s mode:0x%x debug:%d vsync:%d\n", log_prefix, config->mode, config->debug, config->vsync);
 
   gl* gl = memalloc(sizeof(struct g_t));
@@ -54,14 +54,14 @@ OGL* g_open(const g_config* config) {
 
   return gl;
 }
-void g_add_render(OGL* gl, g_renderfn_t fn) {
+void g_add_render(g2030* g, g_renderfn_t fn) {
   gl->renderfn = fn; 
 }
-void g_debug_tri(OGL* gl, f32 x0, f32 y0, f32 x1, f32 y1, f32 x2, f32 y2) {
+void g_debug_tri(g2030* g, f32 x0, f32 y0, f32 x1, f32 y1, f32 x2, f32 y2) {
   LOG("%s Pushing debug triangle draw: vec2(%f, %f), vec2(%f, %f), vec2(%f, %f)\n", 
        log_prefix,                         x0, y0,       x1, y1,       x2, y2);
 }
-void g_run_render_loop(OGL* gl) {
+void g_run_render_loop(g2030* g) {
   LOG("%s Running renderloop..\n", log_prefix);
   while(1) {
     g_renderstate* rs = &gl->renderstate;

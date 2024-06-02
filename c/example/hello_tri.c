@@ -1,12 +1,12 @@
-#include <ogl2030.h>
+#include <g2030.h>
 
-void myrender(OGL* ogl, g_renderstate* rs) {
+void myrender(g2030* g, g_renderstate* rs) {
   const float t = rs->time;
   const float trisize = 0.5f;
-  g_debug_tri( ogl,
-     trisize * cosf(t), trisize * sinf(t),
-     trisize * cosf(t + 1/3.0f*TWOPI), trisize * sinf(t + 1/3.0f*TWOPI),
-     trisize * cosf(t + 2/3.0f*TWOPI), trisize * sinf(t + 2/3.0f*TWOPI) );
+  g_debug_tri( g,
+     trisize * cos(t), trisize * sin(t),
+     trisize * cos(t + 1/3.0f*TWOPI), trisize * sin(t + 1/3.0f*TWOPI),
+     trisize * cos(t + 2/3.0f*TWOPI), trisize * sin(t + 2/3.0f*TWOPI) );
 }
 
 int main() {
@@ -15,8 +15,8 @@ int main() {
     .debug = true,
     .vsync = true,
   };
-  OGL* ogl = g_open(&config);
-  g_add_render( ogl, &myrender );
-  g_run_render_loop( ogl );
+  g2030* g = g_open(&config);
+  g_add_render( g, &myrender );
+  g_run_render_loop( g );
   return 0;
 }

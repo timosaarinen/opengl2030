@@ -1,4 +1,4 @@
-import { g_open, g_close, g_add_render, g_run_render_loop } from '../src/ogl2030.js';
+import { g_open, g_close, g_add_render, g_run_render_loop } from '../src/g2030.js';
 import { gl_viewport, gl_clear } from '../src/gl.js'
 import { vec4, rect, sin, cos, TWOPI } from '../src/vecmath.js'
 import { debug_open } from '../src/debug.js'

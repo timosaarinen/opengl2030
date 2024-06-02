@@ -1,4 +1,4 @@
-import { vec2, vec3, vec4, rect, mat3, mat4 } from './ogl2030.js'
+import { vec2, vec3, vec4, rect, mat3, mat4 } from './g2030.js'
 import { etext } from './util.js'
 
 export const TESTLOG = (...args) => { const s = fmt(...args); console.log(s); etext('testlog', s) } // also print to 'testlog' HTML element

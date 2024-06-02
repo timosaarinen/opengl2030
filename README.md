@@ -15,7 +15,7 @@
 Video: [https://www.youtube.com/watch?v=cjz-T7c9jKI](https://youtu.be/cjz-T7c9jKI?si=F4gr5txx47eD-b8R)
 ```js
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OGL2030 example: Hello, Triangle!</title>
+  <title>G2030 example: Hello, Triangle!</title>
   <style>
     body { margin: 0; background-color: #000; color: #FFF; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100vh; }
     canvas { width: 100%; height: 100%; display: block; }
@@ -27,11 +27,11 @@ Video: [https://www.youtube.com/watch?v=cjz-T7c9jKI](https://youtu.be/cjz-T7c9jK
 </head><body>
   <div id="canvas-container"></div>
   <script type="module">
-    import { g_open, g_add_render, g_run_render_loop } from '/src/ogl2030.js';
-    import { gl_viewport, gl_clear, gl_update_uniforms } from '/src/gl.js'
-    import { vec4, rect, sin, cos, TWOPI } from '/src/vecmath.js'
-    import { debug_open } from '/src/debug.js'
-    import { log_enablegroups } from '/src/log.js'
+    import { g_open, g_add_render, g_run_render_loop } from '../src/g2030.js'
+    import { gl_viewport, gl_clear, gl_update_uniforms } from '../src/gl.js'
+    import { vec4, rect, sin, cos, TWOPI } from '../src/vecmath.js'
+    import { debug_open } from '../src/debug.js'
+    import { log_enablegroups } from '../src/log.js'
 
     document.addEventListener('DOMContentLoaded', main)
 
@@ -60,12 +60,12 @@ Video: [https://www.youtube.com/watch?v=cjz-T7c9jKI](https://youtu.be/cjz-T7c9jK
 
 # Native C example [_outdated_]
 ```c
-#include <ogl2030.h>
+#include <g2030.h>
 
-void myrender(OGL* ogl, g_renderstate* rs) {
+void myrender(g2030* g, g_renderstate* rs) {
   const float t = rs->time;
   const float trisize = 0.5f;
-  g_debug_tri( ogl,
+  g_debug_tri( g,
      trisize * cosf(t), trisize * sinf(t),
      trisize * cosf(t + 1/3.0f*TWOPI), trisize * sinf(t + 1/3.0f*TWOPI),
      trisize * cosf(t + 2/3.0f*TWOPI), trisize * sinf(t + 2/3.0f*TWOPI) );
@@ -77,9 +77,9 @@ int main() {
     .debug = true,
     .vsync = true,
   };
-  OGL* ogl = g_open(&config);
-  g_add_render( ogl, &myrender );
-  g_run_render_loop( ogl );
+  g2030* g = g_open(&config);
+  g_add_render( g, &myrender );
+  g_run_render_loop( g );
   return 0;
 }
 ```

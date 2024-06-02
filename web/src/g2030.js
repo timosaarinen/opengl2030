@@ -14,9 +14,9 @@ export async function g_open(config) {
   const select_backend = config.backend ?? 'webgl2'
   let backend = null
   switch(select_backend) {
-    case 'webgl2':  backend = await create_webgl2_context(config, canvas); LOG('OGL2030: WebGL2 backend selected.');  break
-    case 'webgpu':  backend = await create_webgpu_context(config, canvas); LOG('OGL2030: WebGPU backend selected.'); break
-    case 'null':    backend = await create_nulldevice_context(config, canvas); LOG('OGL2030: nulldevice backend selected.'); break
+    case 'webgl2':  backend = await create_webgl2_context(config, canvas);     LOG('G2030 WebGL2 backend selected.');  break
+    case 'webgpu':  backend = await create_webgpu_context(config, canvas);     LOG('G2030 WebGPU backend selected.'); break
+    case 'null':    backend = await create_nulldevice_context(config, canvas); LOG('G2030 nulldevice backend selected.'); break
     default:        panic('Unsupported backend')
   }
   ASSERT(backend)
