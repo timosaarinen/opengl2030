@@ -106,6 +106,7 @@ export const max3 = (a, b) => vec3(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y,
 export const add3 = (a, b) => vec3(a.x+b.x, a.y+b.y, a.z+b.z)
 export const sub3 = (a, b) => vec3(a.x+b.x, a.y+b.y, a.z+b.z)
 export const mul3 = (v, s) => vec3(s*v.x, s*v.y, s*v.z) // TODO: scale3? mul3scalar?
+export const invert3 = (v) => vec3(-v.x, -v.y, -v.z)
 export const lensquared3 = (v) => v.x*v.x + v.y*v.y + v.z*v.z
 export const len3 = (v) => sqrt( lensquared3(v) )
 export const normalize = (v) => { const d = len3(v); return ( d < EPSILON ) ? VEC3_FAILURE : mul3(v, 1.0/d) } // TODO:
