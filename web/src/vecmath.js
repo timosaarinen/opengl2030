@@ -33,6 +33,7 @@ export const mat4 = (m00 = 1, m01 = 0, m02 = 0, m03 = 0, m10 = 0, m11 = 1, m12 =
   m10, m11, m12, m13,
   m20, m21, m22, m23,
   m30, m31, m32, m33]) })
+export const tonumber = (v) => typeof v === 'number' ? v : v.m[0] // TODO:
 export const tovec2 = (v) => vec2(v.x, v.y) // TODO:
 export const tovec3 = (v) => vec3(v.x, v.y, v.z) // TODO:
 export const tovec4 = (v) => vec4(v.x, v.y, v.z, v.w) // TODO:
@@ -112,36 +113,60 @@ export const distancesquared3 = (a, b) => lensquared3( sub3(b, a) )
 export const distance3 = (a, b) => len3( sub3(b,a) )
 export const cross = (b, c) => vec3(  b.y*c.z - b.z*c.y,  b.z*c.x - b.x*c.z,  b.x*c.y - b.y*c.x )
 //------------------------------------------------------------------------
-// 2x2 transformation matrix functions (ccw radian angles) - TODO: rename to rotate2() etc
+// 2x2 transformation matrix functions - ccw radian angles 
 //------------------------------------------------------------------------
 export const rotation2d         = (a) => mat2( cos(a), -sin(a), sin(a),  cos(a) )
 export const scale2d_uniform    = (s) => mat2( s, 0.0, 0.0, s )
 export const scale2d            = (v) => mat2( v.x, 0.0, 0.0, v.y )
 export const shear2d            = (s) => mat2( 1, s.x, s.y, 1 )
 //------------------------------------------------------------------------
-// 4x4 transformation matrix functions - TODO: rename to identity4() etc
+// 4x4 transformation matrix functions - "column-major like in OpenGL"
 //------------------------------------------------------------------------
-export const mat4identity = ()                => { return mat4(1,0,0,0,    0,1,0,0,    0,0,1,0,    0,0,0,1        )}
-export const mat4translate = (v)              => { return mat4(1,0,0,0,    0,1,0,0,    0,0,1,0,    v.x,v.y,v.z,1  )} 
-export const mat4scale = (v)                  => { return mat4(v.x,0,0,0,  0,v.y,0,0,  0,0,v.z,0,  0,0,0,1        )}
-export const mat4rotate_x = (angle)           => { const c = cos(angle); const s = sin(angle); return mat4(1,0,0, 0,  0, c,s,0,  0, -s, c, 0,  0, 0, 0, 1)  }
-export const mat4rotate_y = (angle)           => { const c = cos(angle); const s = sin(angle); return mat4(c,0,-s,0,  0, 1,0,0,  s, 0,  c, 0,  0, 0, 0, 1)  }
-export const mat4rotate_z = (angle)           => { const c = cos(angle); const s = sin(angle); return mat4(c,s,0, 0,  -s,c,0,0,  0, 0, 1, 0,   0, 0, 0, 1)  }
-export const mat4axisangle = (axis, angle)    => {
+export const identity = ()                => mat4(1,0,0,0,    0,1,0,0,    0,0,1,0,    0,0,0,1 )
+export const translate = (v)              => mat4(1,0,0,v.x,  0,1,0,v.y,  0,0,1,v.z,  0,0,0,1 )
+export const scale = (s)                  => { s = s.z ? s : vec3(s); return mat4(s.x,0,0,0,  0,s.y,0,0,  0,0,s.z,0,  0,0,0,1 )}
+export const xrotate = (angle)            => { const c = cos(angle); const s = sin(angle); return mat4(1,0,0, 0,  0, c,s,0,  0, -s, c, 0,  0, 0, 0, 1)  }
+export const yrotate = (angle)            => { const c = cos(angle); const s = sin(angle); return mat4(c,0,-s,0,  0, 1,0,0,  s, 0,  c, 0,  0, 0, 0, 1)  }
+export const zrotate = (angle)            => { const c = cos(angle); const s = sin(angle); return mat4(c,s,0, 0,  -s,c,0,0,  0, 0, 1, 0,   0, 0, 0, 1)  }
+export const axisangle = (axis, angle)    => {
   axis = normalize(axis); const s = sin(angle); const c = cos(angle); const oc = 1.0 - c
   return mat4( oc * axis.x * axis.x + c,          oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0,
                oc * axis.x * axis.y + axis.z * s, oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0,
                oc * axis.z * axis.x - axis.y * s, oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0,
                0,                                 0,                                  0,                                  1 )
 }
-export const mat4vec4mul = (m, v) => { // TODO: generic, but.. m * vec3
+export const perspective = (frustum) => {
+  const { l, t, r, b, near, far } = frustum
+  return mat4(  2*near/(r - l),   0,                    (r + l)/(r -l),     0,
+                0,                2*near / (t - b),     (t + b) / (t - b),  0,
+                0,                2*near / (t - b),     (t + b) / (t - b),  -2*far*near / (far - near),
+                0,                0,                    -1,                 0 )
+}
+export const ortho = (width, height, depth, flipy = -1) =>
+  mat4( 2/width,  0,                0,        0,
+        0,        flipy*2/height,   0,        0,
+        0,        0,                2/depth,  0, 
+        -1,       1,                0,        1 )
+export const mat4vec3dir = (m, v) => {
+  const x = v.x; const y = v.y; const z = v.z; m = m.m
+  return vec3(  x*m[0]  + y*m[1]  + z*m[2],
+                x*m[4]  + y*m[5]  + z*m[6],
+                x*m[8]  + y*m[9]  + z*m[10] )
+}
+export const mat4vec3point = (m, v) => {
+  const x = v.x; const y = v.y; const z = v.z; m = m.m
+  return vec3(  x*m[0]  + y*m[1]  + z*m[2]  + m[3],
+                x*m[4]  + y*m[5]  + z*m[6]  + m[7],
+                x*m[8]  + y*m[9]  + z*m[10] + m[11] )
+}
+export const mat4vec4mul = (m, v) => {
   const x = v.x; const y = v.y; const z = v.z; const w = v.w; m = m.m
   return vec4(  x*m[0]  + y*m[1]  + z*m[2]  + w*m[3],
                 x*m[4]  + y*m[5]  + z*m[6]  + w*m[7],
                 x*m[8]  + y*m[9]  + z*m[10] + w*m[11],
                 x*m[12] + y*m[13] + z*m[14] + w*m[15] )
 }
-export const mat4mul = (a, b) => { // TODO: optimize (unroll?)
+export const mat4mat4mul = (a, b) => { // TODO: optimize (unroll?)
   let m = mat4()
   for (let i=0; i < 4; ++i) {
     for (let j=0; j < 4; ++j) {
@@ -154,13 +179,29 @@ export const mat4mul = (a, b) => { // TODO: optimize (unroll?)
   }
   return m;
 }
-export const mat4perspective = (frustum) =>
-  mat4( 2*frustum.near / (frustum.r - frustum.l),   0,                                            (frustum.r + frustum.l) / (frustum.r - frustum.l),  0,
-        0,                                          2*frustum.near / (frustum.t - frustum.b),     (frustum.t + frustum.b) / (frustum.t - frustum.b),  0,
-        0,                                          2*frustum.near / (frustum.t - frustum.b),     (frustum.t + frustum.b) / (frustum.t - frustum.b),  -2*frustum.far*frustum.near / (frustum.far - frustum.near),
-        0,                                          0,                                            -1,                                                 0 )
-export const mat4ortho = (width, height, depth, flipy = -1) =>
-  mat4( 2/width,  0,                0,        0,
-        0,        flipy*2/height,   0,        0,
-        0,        0,                2/depth,  0, 
-        -1,       1,                0,        1 )
+//------------------------------------------------------------------------
+// Transform with coordinate system: +X = right, +Y = forward, +Z = up
+//------------------------------------------------------------------------
+export const tright    = (m) => vec3(m.m[0], m.m[4], m.m[8])
+export const tforward  = (m) => vec3(m.m[1], m.m[5], m.m[9])
+export const tup       = (m) => vec3(m.m[2], m.m[6], m.m[10])
+export const tlocation = (m) => vec3(m.m[3], m.m[7], m.m[11])
+export const transform = (m) => ({ right: tright(m), forward: tforward(m), up: tup(m), location: tlocation(m) })
+export const maketransform = ({ right, up, forward, location }) =>
+  mat4( right.x, forward.x,  up.x,  location.x, 
+        right.y, forward.y,  up.y,  location.y,
+        right.z, forward.z,  up.y,  location.z,
+        0,       0,          0,     1 )
+//------------------------------------------------------------------------
+// Generic branch-by-type "operator functions", if we had e.g. '*' mul op
+//------------------------------------------------------------------------
+export const mul = (a, b) => {
+  const typecombination = `${vectype(a)} * ${vectype(b)}` // TODO: ...
+  switch (typecombination) {
+    case 'vec3 * float': return mul3(a,b)
+    case 'mat4 * mat4':  return mat4mat4mul(a,b)
+    case 'mat4 * vec4':  return mat4vec4mul(a,b)
+    case 'mat4 * vec3':  return mat4vec3point(a,b) // NOTE: need to explicitly call mat4vec3dir() or use m4*vec4(v.xyz,0) for direction transform
+    default: panic('unsupported type combination in vecmath.mul():', typecombination)
+  } 
+}
