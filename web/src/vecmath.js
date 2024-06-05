@@ -16,8 +16,8 @@ export const vec2 = (x = 0, y = x) =>                       ({ type: 'vec2', x, 
 export const vec3 = (x = 0, y = x, z = y ?? x) =>           ({ type: 'vec3', x, y, z })
 export const vec4  = (x = 0, y = x, z = y ?? x, w = 1.) =>  ({ type: 'vec4',   x,            y,            z,            w         })
 export const color = (r = 0, g = r, b = g ?? r, a = 1.) =>  ({ type: 'vec4',   x: r,         y: g,         z: b,         w: a      })
-export const quat = (a = 1, b = 0, c = 0, d = 0) =>         ({ type: 'vec4',   x: a,         y: b,         z: c,         w: d      })
-export const plane = (n = vec3(0), d) =>                    ({ type: 'vec4',   x: n.x,       y: n.y,       z: n.z,       w: d      }) // plane ax + by + cz + d = 0
+export const quat = (a = 1, b = 0, c = 0, d = 0) =>         ({ type: 'vec4',   x: b,         y: c,         z: d,         w: a      }) // quaternion a+bI+cJ+dK   -> w+xI+yJ+zK
+export const plane = (n = vec3(0), d) =>                    ({ type: 'vec4',   x: n.x,       y: n.y,       z: n.z,       w: d      }) // plane      aX+bY+cZ+d=0 -> xX+yY+zZ+w=0
 export const rect = (x = 0, y = 0, w = 0, h = 0) =>         ({ type: 'vec4',   x,            y,            z: w,         w: h      }) // TODO: should actually be x2/y2 bounds for faster shader inside test?
 export const sphere = (center = vec3(0), radius = 0) =>     ({ type: 'vec4',   x: center.x,  y: center.y,  z: center.z,  w: radius })
 export const aabb = (center = vec3(0), extents = vec3(0)) =>({ type: 'aabb', center, extents })
@@ -182,18 +182,27 @@ export const mat4mat4mul = (a, b) => { // TODO: optimize (unroll?)
   return m;
 }
 //-------------------------------------------------------------------------------------------------
-// (Unit) Quaternion x+yI+zJ+wK (from a+bI+cJ+dK), where xyzw==real numbers and IJK==basis vectors
+// (Unit) Quaternion
 //-------------------------------------------------------------------------------------------------
 export const quatident = () => quat(1, 0, 0, 0) // identity unit quaternion, no rotation
 export const quatzero  = () => quat(0, 0, 0, 0) // zero quoternion (invalid)
 export const quatrotx  = () => quat(0, 1, 0, 0) // 180 degrees rotation around X-axis
 export const quatroty  = () => quat(0, 0, 1, 0) // 180 degrees rotation around Y-axis
 export const quatrotz  = () => quat(0, 0, 0, 1) // 180 degrees rotation around Z-axis
-export const quatadd = (a, b) => quat(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w)
-export const quatmul = (a, b) => quat(a.x * b.x - a.y * b.y - a.z * b.z - a.w * b.w,
-                                      a.x * b.y + a.y * b.x + a.z * b.w - a.w * b.z,
-                                      a.x * b.z - a.y * b.w + a.z * b.x + a.w * b.y,
-                                      a.x * b.w + a.y * b.z - a.z * b.y + a.w * b.x )
+export const quatadd = (q, r) => quat(q.w + r.w, q.x + r.x, q.y + r.y, q.z + r.z)
+export const quatmul = (q, r) => quat( (q.w * r.w) - (q.x * r.x) - (q.y * r.y) - (q.z * r.z),
+                                       (q.w * r.x) + (q.x * r.w) - (q.y * r.z) + (q.z * r.y),
+                                       (q.w * r.y) + (q.x * r.z) + (q.y * r.w) - (q.z * r.x),
+                                       (q.w * r.z) - (q.x * r.y) - (q.y * r.x) + (q.z * r.w) )
+export const quatslerp = (a, b, t) => {
+  const minrot = 0.000001 //EPSILON
+  const coshalftheta = a.w*b.w + a.x*b.x + a.y*b.y + a.z*b.z; if (abs(coshalftheta) >= 1.0) return a;
+  const halftheta = acos(coshalftheta)
+  const sinhalftheta = sqrt(1.0 - coshalftheta*coshalftheta); if (abs(sinhalftheta) < minrot) return quat(a.w*0.5 + b.w*0.5, a.x*0.5 + b.x*0.5, a.y*0.5 + b.y*0.5, a.z*0.5 + b.z*0.5)
+  const ra = sin(1.0 - t)*halftheta/sinhalftheta
+  const rb = sin(t*halftheta)/sinhalftheta
+  return quat(a.w*ra + b.w*rb, a.x*ra + b.x*rb, a.y*ra + b.y*rb, a.z*ra + b.z*rb)
+}
 //-------------------------------------------------------------------------------------------------
 // Transform with coordinate system: +X = right, +Y = forward, +Z = up
 //-------------------------------------------------------------------------------------------------
