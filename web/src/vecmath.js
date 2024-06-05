@@ -1,8 +1,8 @@
 "use strict"
 import { panic, safe_stringify, ASSERT } from './util.js'
-//------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 //  Base types
-//------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 export const FLOAT_SIZE = 4
 export const vectypes = [ 'float', 'fvec', 'vec2', 'vec3', 'vec4', 'mat2', 'mat3', 'mat4', 'aabb' ] // TODO: 'number' for from js 'number' conversion?
 const bytesize = { 'float': 4, 'vec2': 8, 'vec3': 12, 'vec4': 16, 'mat2': 16, 'mat3': 36, 'mat4': 64 }
@@ -16,6 +16,7 @@ export const vec2 = (x = 0, y = x) =>                       ({ type: 'vec2', x, 
 export const vec3 = (x = 0, y = x, z = y ?? x) =>           ({ type: 'vec3', x, y, z })
 export const vec4  = (x = 0, y = x, z = y ?? x, w = 1.) =>  ({ type: 'vec4',   x,            y,            z,            w         })
 export const color = (r = 0, g = r, b = g ?? r, a = 1.) =>  ({ type: 'vec4',   x: r,         y: g,         z: b,         w: a      })
+export const quat = (a = 1, b = 0, c = 0, d = 0) =>         ({ type: 'vec4',   x: a,         y: b,         z: c,         w: d      })
 export const plane = (n = vec3(0), d) =>                    ({ type: 'vec4',   x: n.x,       y: n.y,       z: n.z,       w: d      }) // plane ax + by + cz + d = 0
 export const rect = (x = 0, y = 0, w = 0, h = 0) =>         ({ type: 'vec4',   x,            y,            z: w,         w: h      }) // TODO: should actually be x2/y2 bounds for faster shader inside test?
 export const sphere = (center = vec3(0), radius = 0) =>     ({ type: 'vec4',   x: center.x,  y: center.y,  z: center.z,  w: radius })
@@ -74,9 +75,9 @@ export function vecstoref32array(arr, n, v) {
     default: panic('vecstoref32array(): unsupported type', safe_stringify(v))
   }
 }
-//------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 //  Scalar math
-//------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 export const PI = Math.PI
 export const TWOPI = 2.0 * PI
 export const HALFPI = 0.5 * PI
@@ -96,9 +97,9 @@ export const saturate = (x) => clamp( x, 0.0, 1.0 )
 export const urand = () => Math.random() //[0,1]
 export const srand = () => 2.0 * Math.random() - 1.0 //[-1,1]
 export const deg = (degrees) => degrees/180.0*PI 
-//------------------------------------------------------------------------
-//  3D vector math
-//------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+//  3D vector
+//-------------------------------------------------------------------------------------------------
 export const VEC3_FAILURE = vec3(0, 0, 1)
 export const dot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z
 export const min3 = (a, b) => vec3(a.x < b.x ? a.x : b.x, a.y < b.y ? a.y : b.y, a.z < b.z ? a.z : b.z)
@@ -113,16 +114,16 @@ export const normalize = (v) => { const d = len3(v); return ( d < EPSILON ) ? VE
 export const distancesquared3 = (a, b) => lensquared3( sub3(b, a) )
 export const distance3 = (a, b) => len3( sub3(b,a) )
 export const cross = (b, c) => vec3(  b.y*c.z - b.z*c.y,  b.z*c.x - b.x*c.z,  b.x*c.y - b.y*c.x )
-//------------------------------------------------------------------------
-// 2x2 transformation matrix functions - ccw radian angles 
-//------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// 2x2 (transformation) matrix  - ccw radian angles 
+//-------------------------------------------------------------------------------------------------
 export const rotation2d         = (a) => mat2( cos(a), -sin(a), sin(a),  cos(a) )
 export const scale2d_uniform    = (s) => mat2( s, 0.0, 0.0, s )
 export const scale2d            = (v) => mat2( v.x, 0.0, 0.0, v.y )
 export const shear2d            = (s) => mat2( 1, s.x, s.y, 1 )
-//------------------------------------------------------------------------
-// 4x4 transformation matrix functions - "column-major like in OpenGL"
-//------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// 4x4 (transformation) matrix - "column-major like in OpenGL"
+//-------------------------------------------------------------------------------------------------
 export const identity = ()                => mat4(1,0,0,0,    0,1,0,0,    0,0,1,0,    0,0,0,1 )
 export const translate = (v)              => mat4(1,0,0,v.x,  0,1,0,v.y,  0,0,1,v.z,  0,0,0,1 )
 export const scale = (s)                  => { s = s.z ? s : vec3(s); return mat4(s.x,0,0,0,  0,s.y,0,0,  0,0,s.z,0,  0,0,0,1 )}
@@ -180,9 +181,22 @@ export const mat4mat4mul = (a, b) => { // TODO: optimize (unroll?)
   }
   return m;
 }
-//------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// (Unit) Quaternion x+yI+zJ+wK (from a+bI+cJ+dK), where xyzw==real numbers and IJK==basis vectors
+//-------------------------------------------------------------------------------------------------
+export const quatident = () => quat(1, 0, 0, 0) // identity unit quaternion, no rotation
+export const quatzero  = () => quat(0, 0, 0, 0) // zero quoternion (invalid)
+export const quatrotx  = () => quat(0, 1, 0, 0) // 180 degrees rotation around X-axis
+export const quatroty  = () => quat(0, 0, 1, 0) // 180 degrees rotation around Y-axis
+export const quatrotz  = () => quat(0, 0, 0, 1) // 180 degrees rotation around Z-axis
+export const quatadd = (a, b) => quat(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w)
+export const quatmul = (a, b) => quat(a.x * b.x - a.y * b.y - a.z * b.z - a.w * b.w,
+                                      a.x * b.y + a.y * b.x + a.z * b.w - a.w * b.z,
+                                      a.x * b.z - a.y * b.w + a.z * b.x + a.w * b.y,
+                                      a.x * b.w + a.y * b.z - a.z * b.y + a.w * b.x )
+//-------------------------------------------------------------------------------------------------
 // Transform with coordinate system: +X = right, +Y = forward, +Z = up
-//------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 export const tright    = (m) => vec3(m.m[0], m.m[4], m.m[8])
 export const tforward  = (m) => vec3(m.m[1], m.m[5], m.m[9])
 export const tup       = (m) => vec3(m.m[2], m.m[6], m.m[10])
@@ -193,9 +207,9 @@ export const maketransform = ({ right, up, forward, location }) =>
         right.y, forward.y,  up.y,  location.y,
         right.z, forward.z,  up.y,  location.z,
         0,       0,          0,     1 )
-//------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 // Generic branch-by-type "operator functions", if we had e.g. '*' mul op
-//------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
 export const mul = (a, b) => {
   const typecombination = `${vectype(a)} * ${vectype(b)}` // TODO: ...
   switch (typecombination) {
