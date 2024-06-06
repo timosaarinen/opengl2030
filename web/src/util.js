@@ -11,7 +11,11 @@ export const sleep_ms = async (ms) => await( timeout_promise(ms) )
 //------------------------------------------------------------------------
 export const fmtdecim = (f, n) => f.toFixed(n) // @example: fmtdecim(1.23456789, 2) == '1.23'
 
-export function safe_stringify(obj, indent) { return 'TODO: enable safe_stringify()' } // TODO: currently this functions is 80% of script time.. find a way to avoid calling if logs are not enabled
+export function safe_stringify(obj, indent) {
+  //return safe_stringify2(obj, indent) // TODO: currently this function takes 80% of script time.. find a way to avoid calling if logs are not enabled
+  try { return JSON.stringify(obj, indent) }
+  catch { return "<circular references>"; }
+}
 
 export function safe_stringify2(obj, indent = 2) {
   let result

@@ -1,5 +1,7 @@
-import { vec2, vec3, vec4, rect, mat3, mat4 } from './g2030.js'
-import { etext } from './util.js'
+import { vec2, vec3, vec4, rect, mat3, mat4 } from './vecmath.js'
+import { fmt } from './util.js'
+import { etext } from './html.js'
+import { yx, wzyx } from './swizzle.js'
 
 export const TESTLOG = (...args) => { const s = fmt(...args); console.log(s); etext('testlog', s) } // also print to 'testlog' HTML element
 
@@ -11,12 +13,16 @@ export function test_types() {
   const m3 = mat3()
   const m4 = mat4()
 
-  TESTLOG('vec2:', v2)
-  TESTLOG('vec3:', v3)
-  TESTLOG('vec4:', v4)
-  TESTLOG('rect:', re)
-  TESTLOG('mat3:', m3)
-  TESTLOG('mat4:', m4)
+  TESTLOG('vec2: v2 = vec2(1, 2) =>', v2)
+  TESTLOG('vec3: v3 = vec3(1, 2, 3) =>', v3)
+  TESTLOG('vec4: v4 = vec4(1, 2, 3, 4) =>', v4)
+  TESTLOG('rect: re = rect(0, 0, 320, 240)', re)
+  TESTLOG('mat3: m3 = mat3() =>', m3)
+  TESTLOG('mat4: m4 = mat4() =>', m4)
+  
+  TESTLOG('-- swizzle --')
+  TESTLOG('s2 = yx(v2) =>', yx(v2))
+  TESTLOG('s4 = wzyx(v4) =>', wzyx(v4))
 }
 export function test_display_list() {
   const gl            = g_display_list()
