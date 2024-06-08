@@ -77,7 +77,7 @@ export function g_run_render_loop(g) {
     if( !g.closed ) g.raf = requestAnimationFrame( render_frame )   // re-schedule for next V-sync (hopefully)
   }
   g.on_mousemove = (event) => { g.mouse = { x: event.clientX, y: g.rs.h - event.clientY }; LOGG( 'input', g.mouse ) }
-  canvas.addEventListener('mousemove', g.on_mousemove)
+  window.addEventListener('mousemove', g.on_mousemove) // TODO: was 'canvas', add clientrect handling if not 100% windowsize
   g.raf = requestAnimationFrame( render_frame ) //render_frame()
 }
 export async function g_wait_nframes(g, numframes) {
