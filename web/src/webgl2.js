@@ -155,7 +155,7 @@ function newfloat32array(uniforms, numbytes, mapping) {
     const value = uniforms[key]
     LOGG('ubo', '  ', key, vectype(value), uniforms[key], 'mapping', mapping[key])
     const byteoffset = mapping[key].offset
-    ASSERTM( 'uniforms must 4-byte aligned', byteoffset % 4 == 0 )
+    ASSERTM(byteoffset % 4 == 0, 'uniforms must 4-byte aligned')
     const floatoffset = byteoffset / 4 
     const numfloats = vecstoref32array(arr, floatoffset, value)
     LOGG('ubo', '     -> offset', byteoffset, 'numbytes', numfloats * 4)
@@ -179,8 +179,6 @@ function update_uniforms( webgl2, ubo, uniforms ) {
   //   const v = uniforms[key]
   //   const vtype = typeof v === 'number' ? 'float' : v.type // vectype(v)
   //   const vtype2 = vectype_unsafe(v)
-  //   ASSERTM(v, vtype)
-  //   ASSERTM(v, vtype === vtype2)
   //   const loc = webgl2.getUniformLocation(program.program, key)
   //   if (loc === null) continue; // unused by the shader (even if declared in the shader, "optimized away")
   //   LOGG('uniforms-verbose', key, ':', vtype, '=', safe_stringify(v), 'loc', loc)
