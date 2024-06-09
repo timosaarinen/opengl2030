@@ -1,4 +1,5 @@
-import { safe_stringify, fmt, md2html } from './util.js'
+import { safe_stringify, fmt } from './util.js'
+import { md2html } from './dom.js'
 
 const LOG_DIV = 'log'; // TODO: cleaner solution?
 

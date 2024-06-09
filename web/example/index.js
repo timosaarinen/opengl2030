@@ -3,6 +3,7 @@ import { gl_viewport, gl_clear } from '../src/gl.js'
 import { vec4, rect, sin, cos, TWOPI } from '../src/vecmath.js'
 import { debug_open } from '../src/debug.js'
 import { log_enablegroups } from '../src/log.js'
+import { run_all_tests } from '../src/testlib.js'
 import { example_open as open_000 } from './000_hello_vertexcolor_tri.js'
 import { example_open as open_001 } from './001_hello_webgpu.js'
 import { example_open as open_002 } from './002_devgui.js'
@@ -39,6 +40,7 @@ async function example_ui() {
   if (button_prev) button_prev.addEventListener('click', () => { goto_example((current - 1 + examples.length) % examples.length) })
 }
 async function main() {
+  try { run_all_tests() } catch(e) { console.log(e); return }
   g = await g_open({ parent: get_parent_container() })
   debug = debug_open( g )
   log_enablegroups( ['resize'] )

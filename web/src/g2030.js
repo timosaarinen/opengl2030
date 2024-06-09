@@ -1,7 +1,7 @@
-import { create_canvas } from './html.js'
+import { domcanvas } from './dom.js'
 import { LOG, LOGG } from './log.js'
 import { ASSERT, safe_stringify, arr_without, sleep_ms } from './util.js'
-import { create_webgl2_context } from './webgl2.js'
+import { create_webgl2_context } from './webgl2.js' // TODO: naming..
 import { create_webgpu_context } from './webgpu.js'
 import { create_nulldevice_context } from './nulldevice.js'
 import { mat4 } from './vecmath.js'
@@ -10,8 +10,8 @@ import { uniforms_new, uniforms_update } from './uniforms.js'
 export async function g_open(config) {
   ASSERT(!config.uniforms) // TODO: might have init-time uniforms?
   config.uniforms = uniforms_new()
-  const canvas = create_canvas()
-  const select_backend = config.backend ?? 'webgl2'
+  const canvas = domcanvas()
+  const select_backend = config.backend ?? 'webgl2' // by default, use WebGL 2.0 backend
   let backend = null
   switch(select_backend) {
     case 'webgl2':  backend = await create_webgl2_context(config, canvas);     LOG('G2030 WebGL2 backend selected.');  break
@@ -76,7 +76,7 @@ export function g_run_render_loop(g) {
     g.backend.submit_display_list( rs.gl )  // submit the main display list for rendering -> backend
     if( !g.closed ) g.raf = requestAnimationFrame( render_frame )   // re-schedule for next V-sync (hopefully)
   }
-  g.on_mousemove = (event) => { g.mouse = { x: event.clientX, y: g.rs.h - event.clientY }; LOGG( 'input', g.mouse ) }
+  g.on_mousemove = (e) => { g.mouse = { x: e.clientX, y: window.innerHeight - e.clientY }; LOGG( 'input', g.mouse ) }
   window.addEventListener('mousemove', g.on_mousemove) // TODO: was 'canvas', add clientrect handling if not 100% windowsize
   g.raf = requestAnimationFrame( render_frame ) //render_frame()
 }
@@ -96,4 +96,18 @@ export async function g_close(g) {
   g.renderfn = null
   g.rs = null
   g.mouse = null
+}
+//-------------------------------------------------------------------------------------------------
+import { TESTLOG } from './test.js'
+import { vec4 } from './vecmath.js'
+import { gl_viewport, gl_clear, gl_tostring } from './gl.js'
+
+export function test_display_list() {
+  const gl            = g_display_list()
+  const viewport_rect = { x: 0, y: 0, width: 320, height: 240 }
+  const clear_color   = { color: vec4(0.5, 0.07, 1.0, 1) }
+  const clear_depth   = 1.0
+  gl_viewport( gl, viewport_rect )
+  gl_clear( gl, clear_color, clear_depth ) // no stencil clear (undefined)
+  TESTLOG( 'test_display_list:', gl_tostring(gl) )
 }
