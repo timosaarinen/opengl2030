@@ -4,7 +4,7 @@ import { test_types } from './type.js'
 import { test_display_list } from './g2030.js'
 import { test_dom } from './dom.js'
 import { test_uuid } from './uuid.js'
-import { test_perf } from './perf.js'
+import { test_time } from './time.js'
 //import { test_vectorf } from './vectorf.js' // TODO: move wasm vector ops
 
 export function run_all_tests(runslowtests = true) {
@@ -13,6 +13,6 @@ export function run_all_tests(runslowtests = true) {
   test_dom()
   test_uuid()
   if (runslowtests) { 
-    test_perf() 
+    test_time() 
   }
 }
