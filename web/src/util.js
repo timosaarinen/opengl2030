@@ -6,6 +6,7 @@ export const ASSERTM = (mustbetrue, msg) => (typeof msg !== 'string') ? panic('p
 export const arr_without = (arr, wo) => arr.filter( e => e !== wo )
 export const timeout_promise = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 export const sleep_ms = async (ms) => await( timeout_promise(ms) )
+export const Enum = (e) => Object.freeze(e)
 //------------------------------------------------------------------------
 //  String utils
 //------------------------------------------------------------------------
