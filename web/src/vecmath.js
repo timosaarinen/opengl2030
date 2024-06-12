@@ -14,12 +14,12 @@ export const float = (x = 0) =>                             ({ type: 'float', m:
 export const fvec = (len) =>                                ({ type: 'fvec',  m: new Float32Array( len ) })
 export const vec2 = (x = 0, y = x) =>                       ({ type: 'vec2', x, y })
 export const vec3 = (x = 0, y = x, z = y ?? x) =>           ({ type: 'vec3', x, y, z })
-export const vec4  = (x = 0, y = x, z = y ?? x, w = 1.) =>  ({ type: 'vec4',   x,            y,            z,            w         })
-export const color = (r = 0, g = r, b = g ?? r, a = 1.) =>  ({ type: 'vec4',   x: r,         y: g,         z: b,         w: a      })
-export const quat = (a = 1, b = 0, c = 0, d = 0) =>         ({ type: 'vec4',   x: b,         y: c,         z: d,         w: a      }) // quaternion a+bI+cJ+dK   -> w+xI+yJ+zK
-export const plane = (n = vec3(0), d) =>                    ({ type: 'vec4',   x: n.x,       y: n.y,       z: n.z,       w: d      }) // plane      aX+bY+cZ+d=0 -> xX+yY+zZ+w=0
-export const rect = (x = 0, y = 0, w = 0, h = 0) =>         ({ type: 'vec4',   x,            y,            z: w,         w: h      }) // TODO: should actually be x2/y2 bounds for faster shader inside test?
-export const sphere = (center = vec3(0), radius = 0) =>     ({ type: 'vec4',   x: center.x,  y: center.y,  z: center.z,  w: radius })
+export const vec4  = (x = 0, y = x, z = y ?? x, w = 1.) =>  ({ type: 'vec4', meta: 'vec4',    x,            y,            z,            w         })
+export const color = (r = 0, g = r, b = g ?? r, a = 1.) =>  ({ type: 'vec4', meta: 'color',   x: r,         y: g,         z: b,         w: a      })
+export const quat = (a = 1, b = 0, c = 0, d = 0) =>         ({ type: 'vec4', meta: 'quat',    x: b,         y: c,         z: d,         w: a      }) // quaternion a+bI+cJ+dK   -> w+xI+yJ+zK
+export const plane = (n = vec3(0), d) =>                    ({ type: 'vec4', meta: 'plane',   x: n.x,       y: n.y,       z: n.z,       w: d      }) // plane      aX+bY+cZ+d=0 -> xX+yY+zZ+w=0
+export const rect = (x = 0, y = 0, w = 0, h = 0) =>         ({ type: 'vec4', meta: 'rect',    x,            y,            z: w,         w: h      }) // TODO: should actually be x2/y2 bounds for faster shader inside test?
+export const sphere = (center = vec3(0), radius = 0) =>     ({ type: 'vec4', meta: 'sphere',  x: center.x,  y: center.y,  z: center.z,  w: radius })
 export const aabb = (center = vec3(0), extents = vec3(0)) =>({ type: 'aabb', center, extents })
 export const frustum = (l, t, r, b, near, far) =>           ({ type: 'frustum', l, t, r, b, near, far })
 export const mat2 = (m00 = 1, m01 = 0, m10 = 0, m11 = 1) => ({ type: 'mat2', m: new Float32Array([ // TODO: would fit into vec4, but keep 'mat2' for 'm'
@@ -84,6 +84,8 @@ export const HALFPI = 0.5 * PI
 export const EPSILON = 1e-42 // TODO:
 export const sin = (rad) => Math.sin(rad)
 export const cos = (rad) => Math.cos(rad)
+export const acos = (x) => Math.acos(x)
+export const atan = (y, x) => Math.atan2(y, x)
 export const sqrt = (v) => Math.sqrt(v)
 export const pow = (x, e) => Math.pow(x, e)
 export const floor = (v) => Math.floor(v)
@@ -96,7 +98,8 @@ export const clamp = (x, minv, maxv) => min( maxv, x, max(0.0, 1.0) )
 export const saturate = (x) => clamp( x, 0.0, 1.0 )
 export const urand = () => Math.random() //[0,1]
 export const srand = () => 2.0 * Math.random() - 1.0 //[-1,1]
-export const deg = (degrees) => degrees/180.0*PI 
+export const deg = (degrees) => degrees/180.0*PI
+export const radians_to_degrees = (rad) => rad/PI*180.0
 //-------------------------------------------------------------------------------------------------
 //  3D vector
 //-------------------------------------------------------------------------------------------------
