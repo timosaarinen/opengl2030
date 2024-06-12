@@ -94,8 +94,8 @@ export const abs = (v) => Math.abs(v)
 export const min = (a, b) => a < b ? a : b
 export const max = (a, b) => a > b ? a : b
 export const lerp = (minv, maxv, t) => minv + t * (maxv - minv)
-export const clamp = (x, minv, maxv) => min( maxv, x, max(0.0, 1.0) )   
-export const saturate = (x) => clamp( x, 0.0, 1.0 )
+export const clamp = (x, minv, maxv) => min(max(x, minv), maxv)
+export const saturate = (x) => clamp(x, 0.0, 1.0)
 export const urand = () => Math.random() //[0,1]
 export const srand = () => 2.0 * Math.random() - 1.0 //[-1,1]
 export const deg = (degrees) => degrees/180.0*PI
