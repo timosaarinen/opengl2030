@@ -101,7 +101,23 @@ export const srand = () => 2.0 * Math.random() - 1.0 //[-1,1]
 export const deg = (degrees) => degrees/180.0*PI
 export const radians_to_degrees = (rad) => rad/PI*180.0
 //-------------------------------------------------------------------------------------------------
-//  3D vector
+//  2D vector math
+//-------------------------------------------------------------------------------------------------
+export const dot2 = (a, b) => a.x * b.x + a.y * b.y
+export const min2 = (a, b) => vec2(a.x < b.x ? a.x : b.x, a.y < b.y ? a.y : b.y)
+export const max2 = (a, b) => vec2(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y)
+export const add2 = (a, b) => vec2(a.x+b.x, a.y+b.y)
+export const sub2 = (a, b) => vec2(a.x-b.x, a.y-b.y)
+export const mul2 = (v, s) => vec2(s*v.x, s*v.y)
+export const invert2 = (v) => vec2(-v.x, -v.y)
+export const lensquared2 = (v) => v.x*v.x + v.y*v.y
+export const len2 = (v) => sqrt( lensquared2(v) )
+export const normalize2 = (v) => { const d = len2(v); return ( d < EPSILON ) ? VEC2_FAILURE : mul2(v, 1.0/d) } // TODO:
+export const distancesquared2 = (a, b) => lensquared2( sub2(b, a) )
+export const distance2 = (a, b) => len2( sub2(b,a) )
+// TODO: 2D "cross product" export const cross2 = (b, c) => ...
+//-------------------------------------------------------------------------------------------------
+//  3D vector math
 //-------------------------------------------------------------------------------------------------
 export const VEC3_FAILURE = vec3(0, 0, 1)
 export const dot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z
