@@ -7,7 +7,7 @@ import { test_uuid } from './uuid.js'
 import { test_time } from './time.js'
 //import { test_vectorf } from './vectorf.js' // TODO: move wasm vector ops
 
-export function run_all_tests(runslowtests = true) {
+export async function testlib_run(runslowtests = true) {
   test_types()
   test_display_list()
   test_dom()

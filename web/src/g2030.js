@@ -41,9 +41,9 @@ export function g_remove_render(g, fn) {
 export function g_force_clear(g, color) {
   if (g.backend.force_clear) g.backend.force_clear(color)
 }
-export function g_display_list(g, name = 'a display list') {
+export function g_display_list(g, id = 'a display list') {
   return { g,
-    name: name,
+    id: id,
     cmd: [],
   }
 }

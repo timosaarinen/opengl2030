@@ -13,7 +13,7 @@ export async function create_webgpu_context(config, canvas) {
   log_print_md('# next-gen WebGPU.. _initialization_!\n') // DEBUG: TODO:
 
   return {
-    name: 'WebGPU',
+    type: 'WebGPU',
     webgpu: webgpu,
     adapter: adapter,
     device: device,

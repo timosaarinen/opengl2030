@@ -216,7 +216,7 @@ export async function create_webgl2_context(config, canvas) {
   const ref_program = new_program( webgl2, vs_ubo_ref, fs_ubo_ref )
   const ubo = new_uniform_buffer(webgl2, config.uniforms, UBO_SIZE, ref_program )
   return {
-    name: 'WebGL 2.0',
+    type: 'WebGL2',
     webgl2: webgl2,
     canvas: canvas,
     force_clear:          (color)                 => clear( webgl2, color, 1.0 ),
